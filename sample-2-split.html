@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>peniel.dev — terminal (split dashboard)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0D0D0D;
+    --panel:#111111;
+    --panel-2:#0f0f0f;
+    --green:#00FF9C;
+    --green-dim:rgba(0,255,156,.55);
+    --gray:#AAAAAA;
+    --gray-dim:#6a6a6a;
+    --yellow:#FFD166;
+    --border:rgba(255,255,255,.06);
+    --border-strong:rgba(0,255,156,.22);
+    --shadow:0 20px 60px rgba(0,0,0,.55), 0 2px 10px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);min-height:100vh;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;color:var(--green)}
+  body{
+    display:flex;align-items:center;justify-content:center;padding:40px 20px;
+    background:
+      radial-gradient(900px 500px at 10% 0%, rgba(0,255,156,.04), transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, rgba(255,209,102,.03), transparent 60%),
+      var(--bg);
+    position:relative;overflow-x:hidden;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity:.35;mix-blend-mode:overlay;
+  }
+
+  .frame{
+    width:min(1200px, 80vw);
+    background:var(--panel);
+    border-radius:8px;border:1px solid var(--border);
+    box-shadow:var(--shadow);overflow:hidden;
+    display:flex;flex-direction:column;min-height:680px;
+  }
+
+  .titlebar{
+    display:flex;align-items:center;gap:10px;padding:11px 16px;
+    background:linear-gradient(180deg,#161616,#101010);
+    border-bottom:1px solid var(--border);user-select:none
+  }
+  .dots{display:flex;gap:7px}
+  .dot{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+  .dot.red{background:#ff5f57}.dot.yellow{background:#febc2e}.dot.green{background:#28c840}
+  .title{flex:1;text-align:center;color:var(--gray);font-size:12.5px}
+  .title b{color:#d6d6d6;font-weight:500}
+  .status{font-size:11px;color:var(--gray-dim)}
+  .status .live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;box-shadow:0 0 6px var(--green)}
+
+  .split{display:grid;grid-template-columns:1.1fr 1fr;min-height:620px}
+  .left{border-right:1px solid var(--border);display:flex;flex-direction:column}
+  .right{background:var(--panel-2);display:flex;flex-direction:column}
+
+  /* terminal side */
+  .screen{
+    padding:20px 22px;
+    font-size:13.5px;line-height:1.65;
+    color:var(--green);
+    text-shadow:0 0 5px rgba(0,255,156,.1);
+    flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#2a2a2a transparent
+  }
+  .screen::-webkit-scrollbar{width:8px}
+  .screen::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:8px}
+  .line{display:flex;gap:10px;align-items:flex-start;white-space:pre-wrap}
+  .prompt{color:var(--green-dim)}
+  .muted{color:var(--gray)}
+  .dim{color:var(--gray-dim)}
+  .accent{color:var(--yellow)}
+  .ok{color:var(--green)}
+  .err{color:#ff6b6b}
+  .hr{height:1px;background:var(--border);margin:12px 0}
+
+  .input-row{display:flex;align-items:center;gap:10px;padding:10px 22px 14px;border-top:1px solid var(--border)}
+  .input-row input{flex:1;background:transparent;border:none;outline:none;color:var(--green);font:inherit;font-size:13.5px;caret-color:var(--green)}
+  .cursor{display:inline-block;width:8px;height:14px;background:var(--green);margin-left:2px;vertical-align:middle;animation:blink 1.05s steps(2,start) infinite;box-shadow:0 0 8px rgba(0,255,156,.6)}
+  @keyframes blink{to{opacity:0}}
+
+  .cmdbar{display:flex;flex-wrap:wrap;gap:8px;padding:12px 22px;border-top:1px solid var(--border);background:#0c0c0c}
+  .cbtn{
+    appearance:none;background:transparent;color:var(--green);
+    border:1px solid var(--border-strong);border-radius:6px;
+    padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;transition:all .18s ease;
+  }
+  .cbtn .sq{color:var(--gray-dim)}
+  .cbtn:hover{border-color:var(--green);box-shadow:0 0 0 1px rgba(0,255,156,.22),0 0 16px rgba(0,255,156,.14);background:rgba(0,255,156,.04)}
+
+  /* right panel / dashboard */
+  .rheader{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;border-bottom:1px solid var(--border);
+    color:var(--gray);font-size:12px;letter-spacing:.06em;text-transform:uppercase
+  }
+  .rheader .chip{font-size:11px;color:var(--yellow);border:1px solid rgba(255,209,102,.25);padding:2px 8px;border-radius:3px;background:rgba(255,209,102,.04)}
+
+  .rbody{padding:18px 20px;overflow-y:auto;flex:1}
+  .rbody h2{margin:4px 0 4px;font-size:18px;color:#eafff5;font-weight:600;letter-spacing:.02em}
+  .rbody .sub{color:var(--gray);font-size:12.5px;margin-bottom:14px}
+
+  .kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .card{border:1px solid var(--border);border-radius:6px;padding:12px;background:rgba(255,255,255,.015)}
+  .card .k{font-size:11px;color:var(--gray-dim);letter-spacing:.05em;text-transform:uppercase}
+  .card .v{font-size:20px;color:var(--green);margin-top:4px}
+  .card .v.accent{color:var(--yellow)}
+  .card .sparkline{margin-top:8px;height:26px;width:100%;display:block}
+
+  .plist{display:flex;flex-direction:column;gap:8px}
+  .pitem{
+    border:1px solid var(--border);border-radius:6px;padding:12px 14px;cursor:pointer;
+    transition:all .18s ease;background:rgba(255,255,255,.015)
+  }
+  .pitem:hover{border-color:var(--border-strong);background:rgba(0,255,156,.03)}
+  .pitem .top{display:flex;justify-content:space-between;align-items:center}
+  .pitem .name{color:#eafff5;font-size:14px}
+  .pitem .stars{color:var(--gray-dim);font-size:11.5px}
+  .pitem .tags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;color:var(--yellow);border:1px solid rgba(255,209,102,.3);padding:1px 7px;border-radius:3px;background:rgba(255,209,102,.04)}
+
+  .architecture{
+    margin-top:10px;border:1px dashed var(--border-strong);border-radius:6px;
+    padding:12px;color:var(--gray);font-size:12px;line-height:1.8
+  }
+  .architecture code{color:var(--green)}
+
+  .runbox{margin-top:10px;border:1px solid var(--border-strong);border-radius:6px;padding:12px}
+  .runbox .label{color:var(--gray);font-size:12px;margin-bottom:6px}
+  .runbox input{width:100%;background:transparent;border:none;outline:none;color:var(--green);font:inherit;font-size:13.5px;caret-color:var(--green);padding:4px 0;border-bottom:1px solid var(--border)}
+  .pred{margin-top:10px;font-size:13px;color:var(--gray)}
+  .pred b{color:var(--yellow)}
+  .badge{display:inline-block;padding:1px 8px;border-radius:3px;border:1px solid rgba(0,255,156,.25);color:var(--green);background:rgba(0,255,156,.08);font-size:11.5px}
+  .badge.warn{color:#ff8a8a;border-color:rgba(255,107,107,.25);background:rgba(255,107,107,.1)}
+
+  .hint{font-size:11.5px;color:var(--gray-dim);margin-top:10px}
+  .pill{display:inline-block;font-size:11px;color:var(--gray);padding:2px 8px;border-radius:20px;border:1px solid var(--border);margin-left:6px}
+
+  @media (max-width: 960px){
+    .split{grid-template-columns:1fr}
+    .left{border-right:none;border-bottom:1px solid var(--border)}
+  }
+</style>
+</head>
+<body>
+<section class="frame">
+  <div class="titlebar">
+    <div class="dots"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+    <div class="title"><b>peniel.dev</b> — terminal <span class="pill">split</span></div>
+    <div class="status"><span class="live"></span>online</div>
+  </div>
+
+  <div class="split">
+    <!-- LEFT: terminal -->
+    <div class="left">
+      <div class="screen" id="screen">
+        <div id="boot"></div>
+      </div>
+
+      <div class="cmdbar" id="cmdbar">
+        <button class="cbtn" data-cmd="about"><span class="sq">[</span>about<span class="sq">]</span></button>
+        <button class="cbtn" data-cmd="projects"><span class="sq">[</span>projects<span class="sq">]</span></button>
+        <button class="cbtn" data-cmd="skills"><span class="sq">[</span>skills<span class="sq">]</span></button>
+        <button class="cbtn" data-cmd="metrics"><span class="sq">[</span>metrics<span class="sq">]</span></button>
+        <button class="cbtn" data-cmd="contact"><span class="sq">[</span>contact<span class="sq">]</span></button>
+        <button class="cbtn" data-cmd="help"><span class="sq">[</span>help<span class="sq">]</span></button>
+      </div>
+
+      <div class="input-row">
+        <span class="prompt">peniel@devops:~$</span>
+        <input id="cli" autocomplete="off" spellcheck="false" aria-label="terminal input"/>
+        <span class="cursor" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <!-- RIGHT: live dashboard -->
+    <div class="right">
+      <div class="rheader">
+        <div id="rtitle">dashboard</div>
+        <div class="chip" id="rchip">live</div>
+      </div>
+      <div class="rbody" id="rbody">
+        <h2>live system view</h2>
+        <div class="sub">side panel follows what's running in the terminal.</div>
+        <div class="kgrid">
+          <div class="card"><div class="k">API status</div><div class="v">online</div></div>
+          <div class="card"><div class="k">requests</div><div class="v accent" id="k-req">1,240</div></div>
+          <div class="card"><div class="k">latency p95</div><div class="v" id="k-lat">120 ms</div></div>
+          <div class="card"><div class="k">error rate</div><div class="v accent" id="k-err">0.2%</div></div>
+        </div>
+        <div class="hint">Tip: click a project on the left or type <span class="accent">projects</span>.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const screen = document.getElementById('screen');
+  const cli = document.getElementById('cli');
+  const rtitle = document.getElementById('rtitle');
+  const rchip  = document.getElementById('rchip');
+  const rbody  = document.getElementById('rbody');
+
+  const bootLines = [
+    '> booting system...',
+    '> loading modules... [kubernetes, prometheus, mlflow]',
+    '> initializing DevOps environment...',
+    '> connecting to ML services... ok',
+    '> welcome to peniel.dev',
+  ];
+
+  // boot
+  let d = 200;
+  bootLines.forEach((t,i)=>{
+    setTimeout(()=>{
+      const el = document.createElement('div');
+      el.className = 'line '+(i===bootLines.length-1?'accent':'dim');
+      el.textContent = t;
+      screen.appendChild(el);
+      screen.scrollTop = screen.scrollHeight;
+      if(i===bootLines.length-1) setTimeout(afterBoot, 420);
+    }, d);
+    d += 380;
+  });
+
+  function afterBoot(){
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="hr"></div>
+      <div style="font-size:18px;color:#eafff5;text-shadow:0 0 10px rgba(0,255,156,.22);margin-bottom:2px">welcome</div>
+      <div class="muted" style="font-size:12.5px">Click a command below or type <span class="accent">help</span>. The right panel updates as you explore.</div>
+    `;
+    screen.appendChild(el);
+    cli.focus();
+  }
+
+  document.querySelectorAll('#cmdbar [data-cmd]').forEach(b=>{
+    b.addEventListener('click',()=> runCommand(b.dataset.cmd));
+  });
+
+  cli.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){
+      const v = cli.value; cli.value = '';
+      runCommand(v);
+    }
+  });
+  document.body.addEventListener('click', e=>{
+    if(e.target.closest('input')) return;
+    cli.focus();
+  });
+
+  function echo(cmd){
+    const row = document.createElement('div');
+    row.className = 'line';
+    row.innerHTML = `<span class="prompt">peniel@devops:~$</span><span>${cmd}</span>`;
+    screen.appendChild(row);
+  }
+  function out(html){
+    const b = document.createElement('div');
+    b.innerHTML = html;
+    screen.appendChild(b);
+    screen.scrollTop = screen.scrollHeight;
+    return b;
+  }
+
+  const projects = {
+    'toxic-ai':{
+      desc:'Real-time toxic comment classifier. FastAPI + PyTorch, shipped with Docker & GH Actions, monitored via Prometheus.',
+      tags:['FastAPI','Docker','PyTorch','MLflow'],
+      m:{req:'12,480',lat:'120 ms',err:'0.2%',up:'99.94%'},
+      arch:`
+ingress ──▶ fastapi ──▶ torchserve ──▶ postgres
+               │              │
+               └──▶ prometheus ◀── grafana`
+    },
+    'fraud-detection':{
+      desc:'Streaming fraud detection with Kafka + Spark Structured Streaming. XGBoost re-trained nightly via Airflow.',
+      tags:['Kafka','Spark','XGBoost','Airflow'],
+      m:{req:'4.2M/d',lat:'38 ms',err:'0.04%',up:'99.99%'},
+      arch:`
+events ─▶ kafka ─▶ spark-streaming ─▶ xgboost
+                         │
+                         └─▶ feature-store ─▶ s3`
+    },
+    'air-quality':{
+      desc:'IoT air-quality forecaster (LSTM) with edge inference on k3s. Dashboards in Grafana.',
+      tags:['TensorFlow','MQTT','Grafana','K3s'],
+      m:{req:'820/m',lat:'64 ms',err:'0.1%',up:'99.7%'},
+      arch:`
+sensors ─▶ mqtt ─▶ k3s-edge ─▶ lstm
+                      │
+                      └─▶ influxdb ─▶ grafana`
+    }
+  };
+
+  function runCommand(raw){
+    const cmd = (raw||'').trim().toLowerCase();
+    if(!cmd) return;
+    echo(cmd);
+
+    if(cmd === 'help'){
+      out(`
+        <div class="line muted">commands:</div>
+        <div class="line muted">  <span class="accent">about</span> · <span class="accent">projects</span> · <span class="accent">skills</span> · <span class="accent">metrics</span> · <span class="accent">contact</span> · <span class="accent">clear</span></div>
+        <div class="line dim">tip: type <span class="accent">open toxic-ai</span> or <span class="accent">run toxic-ai</span></div>
+      `);
+    }
+    else if(cmd === 'about'){
+      out(`<div class="line">peniel — DevOps / MLOps engineer</div>
+           <div class="line muted">I design reproducible ML pipelines and keep them boring in production.</div>`);
+      showAbout();
+    }
+    else if(cmd === 'projects'){
+      const html = `
+        <div class="line muted">projects/</div>
+        <div class="line muted"> ├── <span class="accent pcl" data-open="toxic-ai" style="cursor:pointer">toxic-ai</span></div>
+        <div class="line muted"> ├── <span class="accent pcl" data-open="fraud-detection" style="cursor:pointer">fraud-detection</span></div>
+        <div class="line muted"> └── <span class="accent pcl" data-open="air-quality" style="cursor:pointer">air-quality</span></div>
+      `;
+      const blk = out(html);
+      blk.querySelectorAll('[data-open]').forEach(n=>{
+        n.addEventListener('click',()=> runCommand('open '+n.dataset.open));
+      });
+      showProjects();
+    }
+    else if(cmd === 'skills'){
+      out(`
+        <div class="line muted">infra:    <span class="ok">kubernetes · terraform · aws · gcp · helm</span></div>
+        <div class="line muted">mlops:    <span class="ok">mlflow · kubeflow · airflow · dvc · bentoml</span></div>
+        <div class="line muted">lang:     <span class="ok">python · go · bash · typescript</span></div>
+        <div class="line muted">observe:  <span class="ok">prometheus · grafana · loki · otel</span></div>
+      `);
+      showSkills();
+    }
+    else if(cmd === 'metrics'){
+      out(`
+        <div class="line muted">API status: <span class="ok">online</span></div>
+        <div class="line muted">requests:   <span class="accent">1,240</span></div>
+        <div class="line muted">latency:    <span class="accent">120 ms</span></div>
+        <div class="line muted">errors:     <span class="accent">0.2%</span></div>
+      `);
+      showMetrics();
+    }
+    else if(cmd === 'contact'){
+      out(`
+        <div class="line muted">email:   <span class="ok">hi@peniel.dev</span></div>
+        <div class="line muted">github:  <span class="ok">github.com/peniel</span></div>
+      `);
+      showContact();
+    }
+    else if(cmd.startsWith('open ') || cmd.startsWith('cd ')){
+      const p = cmd.split(/\s+/)[1];
+      if(projects[p]){ showProject(p); out(`<div class="line dim">→ opened <span class="accent">${p}</span> on the right panel.</div>`); }
+      else out(`<div class="line err">no such project: ${p}</div>`);
+    }
+    else if(cmd.startsWith('run ')){
+      const p = cmd.split(/\s+/)[1];
+      if(projects[p]){ showRun(p); out(`<div class="line dim">→ interactive demo ready on the right →</div>`); }
+      else out(`<div class="line err">cannot run: ${p}</div>`);
+    }
+    else if(cmd === 'clear'){
+      screen.innerHTML = ''; afterBoot(); return;
+    }
+    else out(`<div class="line err">command not found: ${cmd}</div>`);
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  /* RIGHT PANEL RENDERERS */
+  function setHeader(title, chip){
+    rtitle.textContent = title;
+    rchip.textContent = chip || 'live';
+  }
+
+  function showAbout(){
+    setHeader('about','profile');
+    rbody.innerHTML = `
+      <h2>peniel</h2>
+      <div class="sub">DevOps · MLOps · Platform engineer</div>
+      <div class="kgrid">
+        <div class="card"><div class="k">base</div><div class="v">remote</div></div>
+        <div class="card"><div class="k">years</div><div class="v accent">6+</div></div>
+        <div class="card"><div class="k">stack</div><div class="v">k8s · tf</div></div>
+        <div class="card"><div class="k">focus</div><div class="v accent">ML infra</div></div>
+      </div>
+      <div class="architecture" style="margin-top:14px">
+        I design and operate reproducible ML pipelines — from feature pipelines to model serving — with a boring, observable, pager-friendly footprint.
+      </div>
+    `;
+  }
+
+  function showProjects(){
+    setHeader('projects','3 repos');
+    const items = Object.entries(projects).map(([id,p])=>`
+      <div class="pitem" data-open="${id}">
+        <div class="top"><div class="name">${id}</div><div class="stars">★ ${(Math.random()*200|0)+50}</div></div>
+        <div class="sub" style="margin:6px 0 0;font-size:12px;color:var(--gray)">${p.desc}</div>
+        <div class="tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+    `).join('');
+    rbody.innerHTML = `
+      <h2>projects</h2>
+      <div class="sub">click to open a project</div>
+      <div class="plist">${items}</div>
+    `;
+    rbody.querySelectorAll('[data-open]').forEach(el=>{
+      el.addEventListener('click',()=> runCommand('open '+el.dataset.open));
+    });
+  }
+
+  function showProject(id){
+    const p = projects[id];
+    setHeader(id,'project');
+    rbody.innerHTML = `
+      <h2>${id}</h2>
+      <div class="sub">${p.desc}</div>
+      <div class="plist" style="flex-direction:row;flex-wrap:wrap">
+        ${p.tags.map(t=>`<span class="tag">${t}</span>`).join(' ')}
+      </div>
+      <div class="kgrid" style="margin-top:14px">
+        <div class="card"><div class="k">requests served</div><div class="v">${p.m.req}</div></div>
+        <div class="card"><div class="k">latency p95</div><div class="v accent">${p.m.lat}</div></div>
+        <div class="card"><div class="k">errors</div><div class="v accent">${p.m.err}</div></div>
+        <div class="card"><div class="k">uptime</div><div class="v">${p.m.up}</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="cbtn" data-act="run"><span class="sq">[</span>run<span class="sq">]</span></button>
+        <button class="cbtn" data-act="github"><span class="sq">[</span>github<span class="sq">]</span></button>
+        <button class="cbtn" data-act="arch"><span class="sq">[</span>architecture<span class="sq">]</span></button>
+      </div>
+      <div class="architecture" style="white-space:pre"><code>${p.arch}</code></div>
+    `;
+    rbody.querySelectorAll('[data-act]').forEach(b=>{
+      b.addEventListener('click',()=>{
+        const a = b.dataset.act;
+        if(a==='run') runCommand('run '+id);
+        else out(`<div class="line muted">→ ${a} opened for <span class="accent">${id}</span></div>`);
+      });
+    });
+  }
+
+  function showRun(id){
+    const p = projects[id];
+    setHeader(id+' · run','demo');
+    rbody.innerHTML = `
+      <h2>run: ${id}</h2>
+      <div class="sub">try the model live — runs a mock inference</div>
+      <div class="runbox">
+        <div class="label">Enter text:</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="prompt">&gt;</span>
+          <input type="text" id="runInput" placeholder="This is a test message" />
+        </div>
+        <div class="pred" id="runPred" style="display:none"></div>
+        <div class="hint">press <span class="accent">enter</span> to predict</div>
+      </div>
+    `;
+    const input = document.getElementById('runInput');
+    const pred  = document.getElementById('runPred');
+    setTimeout(()=> input.focus(), 50);
+    input.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' && input.value.trim()){
+        const txt = input.value.trim();
+        const score = Math.min(0.99, Math.max(0.05, (txt.length%10)/10 + Math.random()*0.4));
+        const toxic = score > 0.5;
+        pred.style.display='block';
+        pred.innerHTML = `prediction: <b>${toxic?'toxic':'non-toxic'}</b> <span class="badge ${toxic?'warn':''}">${score.toFixed(2)}</span>`;
+        out(`<div class="line muted">prediction: <span class="accent">${toxic?'toxic':'non-toxic'}</span> (${score.toFixed(2)})</div>`);
+      }
+    });
+  }
+
+  function showSkills(){
+    setHeader('skills','stack');
+    rbody.innerHTML = `
+      <h2>skills</h2>
+      <div class="sub">tools I reach for</div>
+      <div class="plist">
+        <div class="card"><div class="k">infra</div><div style="margin-top:6px;color:var(--gray);font-size:13px">kubernetes · terraform · aws · gcp · helm · argo-cd</div></div>
+        <div class="card"><div class="k">mlops</div><div style="margin-top:6px;color:var(--gray);font-size:13px">mlflow · kubeflow · airflow · dvc · bentoml · feast</div></div>
+        <div class="card"><div class="k">languages</div><div style="margin-top:6px;color:var(--gray);font-size:13px">python · go · bash · typescript</div></div>
+        <div class="card"><div class="k">observability</div><div style="margin-top:6px;color:var(--gray);font-size:13px">prometheus · grafana · loki · opentelemetry</div></div>
+      </div>
+    `;
+  }
+
+  function showMetrics(){
+    setHeader('metrics','live');
+    rbody.innerHTML = `
+      <h2>live metrics</h2>
+      <div class="sub">production services across 3 projects</div>
+      <div class="kgrid">
+        <div class="card"><div class="k">API status</div><div class="v">online</div></div>
+        <div class="card"><div class="k">requests</div><div class="v accent" id="m-req">1,240</div></div>
+        <div class="card"><div class="k">latency p95</div><div class="v" id="m-lat">120 ms</div></div>
+        <div class="card"><div class="k">error rate</div><div class="v accent" id="m-err">0.2%</div></div>
+      </div>
+      <div class="hint">values refresh every 2s (mock).</div>
+    `;
+    clearInterval(window._tick);
+    window._tick = setInterval(()=>{
+      const r = document.getElementById('m-req');
+      const l = document.getElementById('m-lat');
+      const e = document.getElementById('m-err');
+      if(!r) return clearInterval(window._tick);
+      r.textContent = (1240 + (Math.random()*50|0)).toLocaleString();
+      l.textContent = (110 + (Math.random()*30|0)) + ' ms';
+      e.textContent = (0.1 + Math.random()*0.3).toFixed(2) + '%';
+    }, 2000);
+  }
+
+  function showContact(){
+    setHeader('contact','reach out');
+    rbody.innerHTML = `
+      <h2>contact</h2>
+      <div class="sub">async first, happy to chat</div>
+      <div class="plist">
+        <div class="card"><div class="k">email</div><div class="v" style="font-size:14px">hi@peniel.dev</div></div>
+        <div class="card"><div class="k">github</div><div class="v" style="font-size:14px">github.com/peniel</div></div>
+        <div class="card"><div class="k">linkedin</div><div class="v" style="font-size:14px">linkedin.com/in/peniel</div></div>
+        <div class="card"><div class="k">calendar</div><div class="v" style="font-size:14px">cal.com/peniel</div></div>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
