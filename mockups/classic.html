@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maquette 01 · Classic terminal — peniel.dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+</head>
+<body>
+  <div class="board-header">
+    <a href="index.html" class="nav-back">← toutes les maquettes</a>
+    <div class="kicker">Maquette 01 · direction A</div>
+    <h1 class="board-title">Classic terminal — single column</h1>
+    <p class="board-desc">
+      Interprétation fidèle du brief. Colonne unique, séquence de boot, commandes cliquables, panneau projet en overlay. Tout se passe dans un seul terminal. Visuellement le plus « pur ».
+    </p>
+  </div>
+
+  <div class="board cols-2">
+
+    <!-- FRAME 01 — BOOT -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">01</span> · <span class="name">Boot state</span></div>
+        <div class="note">première frappe au clavier</div>
+      </div>
+      <div class="term">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="screen">
+          <div class="row dim">&gt; booting system...</div>
+          <div class="row dim">&gt; loading modules... [kubernetes, prometheus, mlflow]</div>
+          <div class="row dim">&gt; initializing DevOps environment...</div>
+          <div class="row dim">&gt; connecting to ML services... <span class="ok">ok</span></div>
+          <div class="row accent">&gt; welcome to peniel.dev</div>
+          <div style="flex:1"></div>
+        </div>
+        <div class="input-row">
+          <span class="prompt">peniel@devops:~$</span>
+          <span class="val"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 02 — IDLE -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">02</span> · <span class="name">Idle — welcome</span></div>
+        <div class="note">accueil avec commandes cliquables</div>
+      </div>
+      <div class="term">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="screen">
+          <div class="row dim">&gt; welcome to peniel.dev</div>
+          <div class="hr"></div>
+          <div class="welcome">welcome</div>
+          <div class="hint">
+            Click a command or type <span class="accent">help</span> to begin.
+            <span class="dim">(new here? try clicking <b>about</b>)</span>
+          </div>
+          <div class="cmdbar">
+            <span class="cbtn focused"><span class="sq">[</span>about<span class="sq">]</span></span>
+            <span class="cbtn"><span class="sq">[</span>projects<span class="sq">]</span></span>
+            <span class="cbtn"><span class="sq">[</span>skills<span class="sq">]</span></span>
+            <span class="cbtn"><span class="sq">[</span>metrics<span class="sq">]</span></span>
+            <span class="cbtn"><span class="sq">[</span>contact<span class="sq">]</span></span>
+          </div>
+          <div style="flex:1"></div>
+        </div>
+        <div class="input-row">
+          <span class="prompt">peniel@devops:~$</span>
+          <span class="val"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 03 — PROJECTS TREE -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">03</span> · <span class="name">Projects — file tree</span></div>
+        <div class="note">après commande « projects »</div>
+      </div>
+      <div class="term">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="screen">
+          <div class="row"><span class="prompt">peniel@devops:~$</span><span>projects</span></div>
+          <div class="tree" style="margin-top:8px">
+            <div class="root">projects/</div>
+            <div class="muted"> ├── <span class="name hover">toxic-ai</span><span class="tag2">NLP · FastAPI</span></div>
+            <div class="muted"> ├── <span class="name">fraud-detection</span><span class="tag2">streaming · XGBoost</span></div>
+            <div class="muted"> └── <span class="name">air-quality</span><span class="tag2">IoT · LSTM</span></div>
+          </div>
+          <div class="dim" style="margin-top:10px; font-size:12.5px">click a project to open it.</div>
+          <div style="flex:1"></div>
+        </div>
+        <div class="input-row">
+          <span class="prompt">peniel@devops:~$</span>
+          <span class="val"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 04 — PROJECT PANEL -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">04</span> · <span class="name">Project view</span></div>
+        <div class="note">panneau superposé dans le terminal</div>
+      </div>
+      <div class="term">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="screen">
+          <div class="row"><span class="prompt">peniel@devops:~$</span><span>open toxic-ai</span></div>
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3>toxic-ai</h3>
+              <span class="dim" style="font-size:11px">[ esc ]</span>
+            </div>
+            <p class="desc">Real-time toxic comment classifier. FastAPI + PyTorch, Docker + GH Actions, monitored with Prometheus.</p>
+            <div class="tags">
+              <span class="tag">FastAPI</span>
+              <span class="tag">Docker</span>
+              <span class="tag">PyTorch</span>
+              <span class="tag">MLflow</span>
+            </div>
+            <div class="actions">
+              <span class="cbtn"><span class="sq">[</span>run<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>github<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>architecture<span class="sq">]</span></span>
+            </div>
+            <div class="metrics3">
+              <div class="metric"><div class="k">requests served</div><div class="v">12,480</div></div>
+              <div class="metric"><div class="k">latency (p95)</div><div class="v accent">120 ms</div></div>
+              <div class="metric"><div class="k">uptime (30d)</div><div class="v">99.94%</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="input-row">
+          <span class="prompt">peniel@devops:~$</span>
+          <span class="val"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 05 — RUN STATE -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">05</span> · <span class="name">Run command</span></div>
+        <div class="note">prédiction simulée</div>
+      </div>
+      <div class="term">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="screen">
+          <div class="row"><span class="prompt">peniel@devops:~$</span><span>run toxic-ai</span></div>
+          <div class="runbox">
+            <div class="label">Enter text:</div>
+            <div class="row"><span class="prompt">&gt;</span><span class="value">This is a test message</span></div>
+            <div class="pred">
+              prediction: <b>toxic</b>
+              <span class="badge">0.87</span>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+        </div>
+        <div class="input-row">
+          <span class="prompt">peniel@devops:~$</span>
+          <span class="val"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 06 — METRICS -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">06</span> · <span class="name">Metrics</span></div>
+        <div class="note">état du service en production</div>
+      </div>
+      <div class="term">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="screen">
+          <div class="row"><span class="prompt">peniel@devops:~$</span><span>metrics</span></div>
+          <div style="margin-top:8px">
+            <div class="muted">API status: <span class="ok">online</span></div>
+            <div class="muted">requests:   <span class="accent">1,240</span></div>
+            <div class="muted">latency:    <span class="accent">120 ms</span></div>
+            <div class="muted">errors:     <span class="accent">0.2%</span></div>
+          </div>
+          <div style="flex:1"></div>
+        </div>
+        <div class="input-row">
+          <span class="prompt">peniel@devops:~$</span>
+          <span class="val"></span>
+          <span class="cursor"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

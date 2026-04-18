@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maquette 02 · Split dashboard — peniel.dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  /* Split-specific */
+  .term.split .content { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 460px; }
+  .term.split .left { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .term.split .right { background: var(--panel-2); display: flex; flex-direction: column; }
+  .term.split .screen { min-height: 340px; padding: 16px 20px; flex: 1; }
+  .term.split .rheader {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    color: var(--gray); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .term.split .rheader .chip {
+    font-size: 11px; color: var(--yellow);
+    border: 1px solid rgba(255,209,102,.25);
+    padding: 2px 8px; border-radius: 3px;
+    background: rgba(255,209,102,.04);
+    text-transform: none; letter-spacing: 0;
+  }
+  .term.split .rbody { padding: 16px 18px; flex: 1; }
+  .term.split .rbody h2 { margin: 4px 0 4px; font-size: 18px; color: #eafff5; font-weight: 600; letter-spacing: .02em; }
+  .term.split .rbody .sub { color: var(--gray); font-size: 12.5px; margin-bottom: 12px; }
+  .term.split .input-row { border-top: 1px solid var(--border); background: transparent; padding: 10px 18px 14px; }
+  .term.split .cmdbar-bottom {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 10px 18px; border-top: 1px solid var(--border); background: #0c0c0c;
+  }
+
+  /* dashboard cards */
+  .plist { display: flex; flex-direction: column; gap: 8px; }
+  .pitem {
+    border: 1px solid var(--border); border-radius: 6px; padding: 11px 13px;
+    background: rgba(255,255,255,.015);
+  }
+  .pitem.hover { border-color: var(--border-accent); background: rgba(0,255,156,.03); }
+  .pitem .top { display: flex; justify-content: space-between; align-items: center; }
+  .pitem .name { color: #eafff5; font-size: 14px; }
+  .pitem .stars { color: var(--gray-dim); font-size: 11.5px; }
+  .pitem .sub2 { margin-top: 6px; font-size: 12px; color: var(--gray); line-height: 1.5; }
+  .pitem .tags2 { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .card {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 11px 13px; background: rgba(255,255,255,.015);
+  }
+  .card .k { font-size: 11px; color: var(--gray-dim); letter-spacing: .05em; text-transform: uppercase; }
+  .card .v { font-size: 20px; color: var(--green); margin-top: 4px; }
+  .card .v.accent { color: var(--yellow); }
+
+  .architecture {
+    margin-top: 10px; border: 1px dashed var(--border-accent); border-radius: 6px;
+    padding: 10px 12px; color: var(--gray); font-size: 12px; line-height: 1.8;
+    white-space: pre;
+  }
+  .architecture code { color: var(--green); }
+</style>
+</head>
+<body>
+  <div class="board-header">
+    <a href="index.html" class="nav-back">← toutes les maquettes</a>
+    <div class="kicker">Maquette 02 · direction B</div>
+    <h1 class="board-title">Split dashboard — terminal + live panel</h1>
+    <p class="board-desc">
+      Le terminal à gauche reste le point d'entrée ; à droite, un panneau latéral suit l'état en direct (projets, métriques, architectures). Pour un utilisateur non-technique, le panneau droit fait le travail — le terminal devient un « contrôleur ».
+    </p>
+  </div>
+
+  <div class="board">
+
+    <!-- FRAME 01 — BOOT / WELCOME -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">01</span> · <span class="name">Boot + welcome</span></div>
+        <div class="note">le panneau droit affiche déjà les métriques globales</div>
+      </div>
+      <div class="term split">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">split</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="content">
+          <div class="left">
+            <div class="screen">
+              <div class="row dim">&gt; booting system...</div>
+              <div class="row dim">&gt; loading modules... [kubernetes, prometheus, mlflow]</div>
+              <div class="row dim">&gt; initializing DevOps environment...</div>
+              <div class="row dim">&gt; connecting to ML services... <span class="ok">ok</span></div>
+              <div class="row accent">&gt; welcome to peniel.dev</div>
+              <div class="hr"></div>
+              <div class="welcome">welcome</div>
+              <div class="hint">
+                Click a command or type <span class="accent">help</span> — the right panel follows along.
+              </div>
+              <div style="flex:1"></div>
+            </div>
+            <div class="cmdbar-bottom">
+              <span class="cbtn"><span class="sq">[</span>about<span class="sq">]</span></span>
+              <span class="cbtn focused"><span class="sq">[</span>projects<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>skills<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>metrics<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>contact<span class="sq">]</span></span>
+            </div>
+            <div class="input-row">
+              <span class="prompt">peniel@devops:~$</span>
+              <span class="val"></span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+          <div class="right">
+            <div class="rheader"><div>dashboard</div><div class="chip">live</div></div>
+            <div class="rbody">
+              <h2>live system view</h2>
+              <div class="sub">side panel follows what's running in the terminal.</div>
+              <div class="metrics3" style="grid-template-columns:repeat(2,1fr)">
+                <div class="card"><div class="k">API status</div><div class="v">online</div></div>
+                <div class="card"><div class="k">requests</div><div class="v accent">1,240</div></div>
+                <div class="card"><div class="k">latency p95</div><div class="v">120 ms</div></div>
+                <div class="card"><div class="k">error rate</div><div class="v accent">0.2%</div></div>
+              </div>
+              <div class="dim" style="font-size:11.5px;margin-top:10px">
+                Tip: click a project or type <span class="accent">projects</span>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 02 — PROJECTS LIST -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">02</span> · <span class="name">Projects — list + bento</span></div>
+        <div class="note">l'arbre à gauche, cartes riches à droite</div>
+      </div>
+      <div class="term split">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">split</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="content">
+          <div class="left">
+            <div class="screen">
+              <div class="row"><span class="prompt">peniel@devops:~$</span><span>projects</span></div>
+              <div class="tree" style="margin-top:6px">
+                <div class="muted">projects/</div>
+                <div class="muted"> ├── <span class="accent">toxic-ai</span></div>
+                <div class="muted"> ├── <span class="accent">fraud-detection</span></div>
+                <div class="muted"> └── <span class="accent">air-quality</span></div>
+              </div>
+              <div style="flex:1"></div>
+            </div>
+            <div class="cmdbar-bottom">
+              <span class="cbtn"><span class="sq">[</span>about<span class="sq">]</span></span>
+              <span class="cbtn focused"><span class="sq">[</span>projects<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>skills<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>metrics<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>contact<span class="sq">]</span></span>
+            </div>
+            <div class="input-row">
+              <span class="prompt">peniel@devops:~$</span>
+              <span class="val"></span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+          <div class="right">
+            <div class="rheader"><div>projects</div><div class="chip">3 repos</div></div>
+            <div class="rbody">
+              <h2>projects</h2>
+              <div class="sub">click to open a project</div>
+              <div class="plist">
+                <div class="pitem hover">
+                  <div class="top"><div class="name">toxic-ai</div><div class="stars">★ 142</div></div>
+                  <div class="sub2">Real-time toxic comment classifier. FastAPI + PyTorch.</div>
+                  <div class="tags2"><span class="tag">FastAPI</span><span class="tag">Docker</span><span class="tag">MLflow</span></div>
+                </div>
+                <div class="pitem">
+                  <div class="top"><div class="name">fraud-detection</div><div class="stars">★ 87</div></div>
+                  <div class="sub2">Streaming fraud detection pipeline. Kafka + Spark + XGBoost.</div>
+                  <div class="tags2"><span class="tag">Kafka</span><span class="tag">Spark</span><span class="tag">Airflow</span></div>
+                </div>
+                <div class="pitem">
+                  <div class="top"><div class="name">air-quality</div><div class="stars">★ 64</div></div>
+                  <div class="sub2">IoT air-quality forecaster (LSTM) with edge inference on k3s.</div>
+                  <div class="tags2"><span class="tag">TensorFlow</span><span class="tag">K3s</span><span class="tag">Grafana</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 03 — PROJECT DETAIL -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">03</span> · <span class="name">Project detail + architecture</span></div>
+        <div class="note">ouverture d'un projet</div>
+      </div>
+      <div class="term split">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">split</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="content">
+          <div class="left">
+            <div class="screen">
+              <div class="row"><span class="prompt">peniel@devops:~$</span><span>projects</span></div>
+              <div class="tree"><div class="muted"> ├── <span class="accent">toxic-ai</span></div></div>
+              <div class="row"><span class="prompt">peniel@devops:~$</span><span>open toxic-ai</span></div>
+              <div class="dim" style="margin-top:4px;font-size:12.5px">→ opened <span class="accent">toxic-ai</span> on the right panel.</div>
+              <div style="flex:1"></div>
+            </div>
+            <div class="cmdbar-bottom">
+              <span class="cbtn"><span class="sq">[</span>about<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>projects<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>skills<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>metrics<span class="sq">]</span></span>
+            </div>
+            <div class="input-row">
+              <span class="prompt">peniel@devops:~$</span>
+              <span class="val"></span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+          <div class="right">
+            <div class="rheader"><div>toxic-ai</div><div class="chip">project</div></div>
+            <div class="rbody">
+              <h2>toxic-ai</h2>
+              <div class="sub">Real-time toxic comment classifier served as a FastAPI microservice.</div>
+              <div class="tags" style="margin-bottom:10px">
+                <span class="tag">FastAPI</span><span class="tag">Docker</span><span class="tag">PyTorch</span><span class="tag">MLflow</span>
+              </div>
+              <div class="metrics3" style="grid-template-columns:repeat(2,1fr)">
+                <div class="card"><div class="k">requests served</div><div class="v">12,480</div></div>
+                <div class="card"><div class="k">latency p95</div><div class="v accent">120 ms</div></div>
+                <div class="card"><div class="k">errors</div><div class="v accent">0.2%</div></div>
+                <div class="card"><div class="k">uptime</div><div class="v">99.94%</div></div>
+              </div>
+              <div class="cmdbar" style="margin-top:12px">
+                <span class="cbtn"><span class="sq">[</span>run<span class="sq">]</span></span>
+                <span class="cbtn"><span class="sq">[</span>github<span class="sq">]</span></span>
+                <span class="cbtn"><span class="sq">[</span>architecture<span class="sq">]</span></span>
+              </div>
+              <div class="architecture"><code>ingress ──▶ fastapi ──▶ torchserve ──▶ postgres
+               │              │
+               └──▶ prometheus ◀── grafana</code></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 04 — RUN DEMO -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">04</span> · <span class="name">Run — interactive demo</span></div>
+        <div class="note">l'utilisateur teste le modèle en direct</div>
+      </div>
+      <div class="term split">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">split</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="content">
+          <div class="left">
+            <div class="screen">
+              <div class="row"><span class="prompt">peniel@devops:~$</span><span>run toxic-ai</span></div>
+              <div class="dim" style="margin-top:4px;font-size:12.5px">→ interactive demo ready on the right →</div>
+              <div class="row" style="margin-top:8px"><span class="muted">prediction: <span class="accent">toxic</span> (0.87)</span></div>
+              <div style="flex:1"></div>
+            </div>
+            <div class="cmdbar-bottom">
+              <span class="cbtn"><span class="sq">[</span>about<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>projects<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>metrics<span class="sq">]</span></span>
+            </div>
+            <div class="input-row">
+              <span class="prompt">peniel@devops:~$</span>
+              <span class="val"></span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+          <div class="right">
+            <div class="rheader"><div>toxic-ai · run</div><div class="chip">demo</div></div>
+            <div class="rbody">
+              <h2>run: toxic-ai</h2>
+              <div class="sub">try the model live — runs a mock inference</div>
+              <div class="runbox">
+                <div class="label">Enter text:</div>
+                <div class="row"><span class="prompt">&gt;</span><span class="value">This is a test message</span></div>
+                <div class="pred">
+                  prediction: <b>toxic</b>
+                  <span class="badge">0.87</span>
+                </div>
+                <div class="dim" style="margin-top:10px;font-size:11.5px">press <span class="accent">enter</span> to predict</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FRAME 05 — METRICS LIVE -->
+    <div class="frame">
+      <div class="frame-label">
+        <div><span class="num">05</span> · <span class="name">Metrics — live</span></div>
+        <div class="note">bento de 4 cartes + rafraîchissement toutes les 2s</div>
+      </div>
+      <div class="term split">
+        <div class="titlebar">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">split</span></div>
+          <div class="status"><span class="live"></span>online</div>
+        </div>
+        <div class="content">
+          <div class="left">
+            <div class="screen">
+              <div class="row"><span class="prompt">peniel@devops:~$</span><span>metrics</span></div>
+              <div style="margin-top:6px">
+                <div class="muted">API status: <span class="ok">online</span></div>
+                <div class="muted">requests:   <span class="accent">1,247</span></div>
+                <div class="muted">latency:    <span class="accent">118 ms</span></div>
+                <div class="muted">errors:     <span class="accent">0.21%</span></div>
+              </div>
+              <div style="flex:1"></div>
+            </div>
+            <div class="cmdbar-bottom">
+              <span class="cbtn"><span class="sq">[</span>projects<span class="sq">]</span></span>
+              <span class="cbtn focused"><span class="sq">[</span>metrics<span class="sq">]</span></span>
+              <span class="cbtn"><span class="sq">[</span>contact<span class="sq">]</span></span>
+            </div>
+            <div class="input-row">
+              <span class="prompt">peniel@devops:~$</span>
+              <span class="val"></span>
+              <span class="cursor"></span>
+            </div>
+          </div>
+          <div class="right">
+            <div class="rheader"><div>metrics</div><div class="chip">live</div></div>
+            <div class="rbody">
+              <h2>live metrics</h2>
+              <div class="sub">production services across 3 projects</div>
+              <div class="metrics3" style="grid-template-columns:repeat(2,1fr)">
+                <div class="card"><div class="k">API status</div><div class="v">online</div></div>
+                <div class="card"><div class="k">requests</div><div class="v accent">1,247</div></div>
+                <div class="card"><div class="k">latency p95</div><div class="v">118 ms</div></div>
+                <div class="card"><div class="k">error rate</div><div class="v accent">0.21%</div></div>
+              </div>
+              <div class="dim" style="font-size:11.5px;margin-top:10px">values refresh every 2s.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
