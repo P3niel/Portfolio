@@ -21,4 +21,5 @@ images:
 
 patches:
   - path: patches/api-limits.yaml
-  - path: patches/ingress-host.yaml
+  - path: patches/nodeport-services.yaml
+  # - path: patches/ingress-host.yaml  # uncomment when domain is available

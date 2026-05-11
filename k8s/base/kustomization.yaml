@@ -23,5 +23,5 @@ resources:
   - monitoring/loki-configmap.yaml
   - monitoring/loki-deployment.yaml
   - monitoring/loki-service.yaml
-  - ingress/clusterissuer.yaml
-  - ingress/ingress.yaml
+  # ingress/clusterissuer.yaml — add when domain is available
+  # ingress/ingress.yaml      — add when domain is available
