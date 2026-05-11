@@ -6,7 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ${{ github.repository_owner }}
 
 jobs:
   build-push:
@@ -17,13 +16,16 @@ jobs:
       packages: write
     outputs:
       sha: ${{ steps.meta.outputs.sha }}
+      owner: ${{ steps.meta.outputs.owner }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set image SHA
+      - name: Set image SHA and lowercase owner
         id: meta
-        run: echo "sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/login-action@v3
         with:
@@ -40,8 +42,8 @@ jobs:
           file: docker/api.Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-api:${{ steps.meta.outputs.sha }}
-            ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-api:latest
+            ghcr.io/${{ steps.meta.outputs.owner }}/portfolio-api:${{ steps.meta.outputs.sha }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/portfolio-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -52,8 +54,8 @@ jobs:
           file: docker/pipeline.Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-pipeline:${{ steps.meta.outputs.sha }}
-            ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-pipeline:latest
+            ghcr.io/${{ steps.meta.outputs.owner }}/portfolio-pipeline:${{ steps.meta.outputs.sha }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/portfolio-pipeline:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -64,8 +66,8 @@ jobs:
           file: docker/training.Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-training:${{ steps.meta.outputs.sha }}
-            ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-training:latest
+            ghcr.io/${{ steps.meta.outputs.owner }}/portfolio-training:${{ steps.meta.outputs.sha }}
+            ghcr.io/${{ steps.meta.outputs.owner }}/portfolio-training:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -94,14 +96,9 @@ jobs:
         run: |
           cd k8s/overlays/production
           kustomize edit set image \
-            portfolio-api=ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-api:${{ needs.build-push.outputs.sha }} \
-            portfolio-pipeline=ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-pipeline:${{ needs.build-push.outputs.sha }} \
-            portfolio-training=ghcr.io/${{ env.IMAGE_OWNER }}/portfolio-training:${{ needs.build-push.outputs.sha }}
-
-      - name: Patch ingress domain
-        run: |
-          sed -i "s/DOMAIN_PLACEHOLDER/${{ secrets.VPS_DOMAIN }}/g" \
-            k8s/overlays/production/patches/ingress-host.yaml
+            portfolio-api=ghcr.io/${{ needs.build-push.outputs.owner }}/portfolio-api:${{ needs.build-push.outputs.sha }} \
+            portfolio-pipeline=ghcr.io/${{ needs.build-push.outputs.owner }}/portfolio-pipeline:${{ needs.build-push.outputs.sha }} \
+            portfolio-training=ghcr.io/${{ needs.build-push.outputs.owner }}/portfolio-training:${{ needs.build-push.outputs.sha }}
 
       - name: Apply manifests
         run: kubectl apply -k k8s/overlays/production/
