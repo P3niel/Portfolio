@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: portfolio
+
+resources:
+  - ../../base
+
+# Image tags are updated by CI/CD via:
+# kustomize edit set image portfolio-api=ghcr.io/<owner>/portfolio-api:<sha>
+images:
+  - name: portfolio-api
+    newName: ghcr.io/peniel/portfolio-api
+    newTag: latest
+  - name: portfolio-pipeline
+    newName: ghcr.io/peniel/portfolio-pipeline
+    newTag: latest
+  - name: portfolio-training
+    newName: ghcr.io/peniel/portfolio-training
+    newTag: latest
+
+patches:
+  - path: patches/api-limits.yaml
+  - path: patches/ingress-host.yaml

@@ -1,0 +1,49 @@
+name: MLOps — Model Promotion
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily at 6h UTC, after data pipeline (2h) + training (manual or triggered)
+    - cron: "0 6 * * *"
+
+jobs:
+  evaluate-and-promote:
+    name: Compare & promote model
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: training/requirements.txt
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+        working-directory: training
+
+      - name: Run promotion script
+        id: promote
+        run: python promote.py
+        working-directory: training
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MODEL_NAME: portfolio-model
+        # promote.py must output:  echo "promoted=true" >> $GITHUB_OUTPUT  if a promotion occurred
+
+      - name: Set kubeconfig
+        if: steps.promote.outputs.promoted == 'true'
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Restart API deployment
+        if: steps.promote.outputs.promoted == 'true'
+        run: kubectl rollout restart deployment/api -n portfolio
+
+      - name: Wait for rollout
+        if: steps.promote.outputs.promoted == 'true'
+        run: kubectl rollout status deployment/api -n portfolio --timeout=120s

@@ -3,228 +3,1444 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Maquette 01 · Classic terminal — peniel.dev</title>
+<title>peniel.dev</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="_shared.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────── */
+:root {
+  /* vitrine — dark, matches terminal */
+  --bg: #0D0D0D;
+  --surface: #111111;
+  --ink: #eafff5;
+  --ink-2: #AAAAAA;
+  --ink-3: #6a6a6a;
+  --rule: rgba(255,255,255,.06);
+  --tag-bg: rgba(0,255,156,.04);
+  --tag-border: rgba(0,255,156,.18);
+  --accent: #00FF9C;
+  --accent-soft: rgba(0,255,156,.1);
+
+  /* terminal */
+  --t-bg: #0D0D0D;
+  --t-surface: #111111;
+  --t-green: #00FF9C;
+  --t-green-dim: rgba(0,255,156,.5);
+  --t-yellow: #FFD166;
+  --t-gray: #AAAAAA;
+  --t-gray-dim: #6a6a6a;
+  --t-border: rgba(255,255,255,.06);
+  --t-border-strong: rgba(0,255,156,.22);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  overflow-x: hidden;
+  /* space for docked terminal titlebar */
+  padding-bottom: 42px;
+}
+
+/* ─── NAVBAR ─────────────────────────────────────────── */
+.navbar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(13,13,13,.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--rule);
+  border-radius: 100px;
+  padding: 8px 6px;
+  display: flex;
+  gap: 2px;
+  box-shadow: 0 2px 20px rgba(0,0,0,.4);
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 100px;
+  transition: all .2s ease;
+  letter-spacing: .01em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-link:hover { color: var(--ink); background: rgba(0,255,156,.06); }
+.nav-link.active { background: rgba(0,255,156,.12); color: var(--accent); border: 1px solid rgba(0,255,156,.25); }
+
+.nav-theme-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 100px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s, border-color .2s;
+  margin-left: 4px;
+  position: relative;
+}
+.nav-theme-btn:hover {
+  background: rgba(0,255,156,.06);
+  border-color: var(--tag-border);
+}
+
+/* ─── THEME ICONS ────────────────────────────────────────── */
+.theme-icon {
+  position: absolute;
+  width: 18px; height: 18px;
+  transition: opacity .35s ease, transform .35s ease;
+}
+#iconSun  { opacity: 0; transform: scale(.6) rotate(-30deg); }
+#iconMoon { opacity: 1; transform: scale(1)  rotate(0deg);   }
+body.light #iconSun  { opacity: 1; transform: scale(1)  rotate(0deg);  }
+body.light #iconMoon { opacity: 0; transform: scale(.6) rotate(30deg); }
+
+/* Sun: rays group spins */
+@keyframes sunSpin { to { transform: rotate(360deg); } }
+.sun-rays {
+  animation: sunSpin 12s linear infinite;
+  transform-origin: 24px 24px;
+}
+/* Sun: individual ray pulses */
+@keyframes rayPulse { 0%,100% { opacity:.4; } 50% { opacity:1; } }
+.sun-ray { animation: rayPulse 2s ease-in-out infinite; }
+.sun-ray:nth-child(1){animation-delay:0s}
+.sun-ray:nth-child(2){animation-delay:.25s}
+.sun-ray:nth-child(3){animation-delay:.5s}
+.sun-ray:nth-child(4){animation-delay:.75s}
+.sun-ray:nth-child(5){animation-delay:1s}
+.sun-ray:nth-child(6){animation-delay:1.25s}
+.sun-ray:nth-child(7){animation-delay:1.5s}
+.sun-ray:nth-child(8){animation-delay:1.75s}
+/* Sun: core glow pulse */
+@keyframes sunGlow { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+.sun-glow { animation: sunGlow 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+/* Moon: stars twinkle */
+@keyframes starTwinkle {
+  0%,100% { opacity:.2; transform:scale(.8); }
+  50%      { opacity:.9; transform:scale(1.2); }
+}
+.moon-star { animation: starTwinkle 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.moon-star:nth-child(3){animation-delay:0s}
+.moon-star:nth-child(4){animation-delay:.5s}
+.moon-star:nth-child(5){animation-delay:1s}
+.moon-star:nth-child(6){animation-delay:1.5s}
+
+/* ─── VITRINE LAYOUT ─────────────────────────────────── */
+.vitrine {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 100px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* motion-footer shadow overlay — grows from bottom as you scroll through each section */
+section::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: -32px; right: -32px;
+  height: 220px;
+  background: linear-gradient(to top,
+    rgba(0,0,0,.55) 0%,
+    rgba(0,0,0,.15) 45%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transform: scaleY(0.4);
+  transform-origin: bottom;
+  transition: opacity .12s ease, transform .12s ease;
+  will-change: opacity, transform;
+  z-index: 2;
+}
+section.shadow-active::after {
+  opacity: calc(var(--shadow-depth, 0) * 1);
+  transform: scaleY(calc(0.4 + var(--shadow-depth, 0) * 0.6));
+}
+
+section + section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -32px; right: -32px;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* section label */
+.s-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+/* ─── ABOUT ──────────────────────────────────────────── */
+#about .headline {
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  margin-bottom: 24px;
+  text-shadow: 0 0 40px rgba(0,255,156,.08);
+}
+#about .headline em {
+  font-style: normal;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0,255,156,.3);
+}
+#about .bio {
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  max-width: 560px;
+  font-weight: 300;
+  margin-bottom: 32px;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--tag-border);
+  background: var(--tag-bg);
+  color: var(--accent);
+}
+
+/* ─── PROJECTS ───────────────────────────────────────── */
+.project-grid { display: flex; flex-direction: column; gap: 16px; }
+
+.project-card {
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 24px 28px;
+  background: var(--surface);
+  transition: border-color .2s, box-shadow .2s;
+}
+.project-card:hover {
+  border-color: rgba(26,26,24,.2);
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+.project-card .p-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.project-card h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -.01em;
+}
+.project-card .tagline {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  font-weight: 300;
+}
+.p-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.p-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  border: 1px solid var(--tag-border);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.p-metric {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.p-metric strong { color: var(--accent); font-weight: 500; }
+
+/* ─── SKILLS ─────────────────────────────────────────── */
+.skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.skill-block {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 20px 22px;
+  background: var(--surface);
+}
+.skill-block .sk-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 12px;
+}
+.skill-block .sk-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sk-item {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--tag-bg);
+}
+
+/* ─── METRICS ────────────────────────────────────────── */
+.metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.metric-card {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 22px 20px;
+  background: var(--surface);
+}
+.metric-card .mk { font-size: 12px; color: var(--ink-3); margin-bottom: 8px; font-weight: 400; }
+.metric-card .mv { font-size: 30px; font-weight: 600; color: var(--ink); letter-spacing: -.02em; line-height: 1; }
+.metric-card .mv.green { color: var(--accent); }
+.metric-card .ms { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+
+/* ─── CONTACT ────────────────────────────────────────── */
+#contact .contact-line {
+  font-size: 15px;
+  color: var(--ink-2);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#contact .contact-line:first-child { border-top: 1px solid var(--rule); }
+#contact .contact-line .c-label { font-weight: 500; color: var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+#contact .contact-line a { color: var(--ink-2); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+#contact .contact-line a:hover { color: var(--accent); }
+
+/* ─── MOTION FOOTER SHADOW ───────────────────────────── */
+.motion-footer-shadow {
+  pointer-events: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(to top, rgba(13,13,13,.95) 0%, transparent 100%);
+  z-index: 50;
+  transition: opacity .4s ease;
+  opacity: 0;
+}
+.motion-footer-shadow.visible { opacity: 1; }
+
+/* ─── TERMINAL ZONE — docked fixed bottom ────────────── */
+.terminal-zone {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  pointer-events: none; /* passthrough except card */
+}
+
+.cs-wrapper {
+  width: 100%;
+  max-width: 960px;
+  pointer-events: all;
+  perspective: 1000px;
+}
+
+/* the animated card */
+.cs-card {
+  width: 100%;
+  background: var(--t-surface);
+  border: 1px solid var(--t-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 60px rgba(0,0,0,.8), 0 0 0 1px var(--t-border-strong);
+  /* minimized: peek 108px + Aceternity tilt */
+  transform: translateY(calc(100% - 108px)) rotateX(20deg) scale(1.05);
+  transform-origin: center bottom;
+  transition: transform .55s cubic-bezier(.22,1,.36,1);
+  will-change: transform;
+  cursor: pointer;
+}
+
+.cs-card.expanded {
+  transform: translateY(0) rotateX(0deg) scale(1);
+  cursor: default;
+}
+
+.cs-card.closed {
+  transform: translateY(calc(100% + 16px)) rotateX(0deg) scale(1);
+}
+
+/* titlebar */
+.t-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: linear-gradient(180deg,#161616,#101010);
+  border-bottom: 1px solid var(--t-border);
+  user-select: none;
+}
+.t-dots { display: flex; gap: 7px; }
+.t-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+  cursor: pointer;
+  position: relative;
+  transition: filter .15s;
+}
+.t-dot:hover { filter: brightness(1.2); }
+.t-dot::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: 18px; left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #ccc;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s;
+  z-index: 10;
+}
+.t-dot:hover::after { opacity: 1; }
+.t-dot.red { background: #ff5f57; }
+.t-dot.yellow { background: #febc2e; }
+.t-dot.green { background: #28c840; }
+/* disabled dot when terminal closed */
+.t-dot.disabled { opacity: .3; cursor: not-allowed; filter: none; }
+.t-dot.disabled::after { display: none; }
+
+/* open terminal button shown when closed */
+.t-reopen-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--t-green);
+  background: rgba(0,255,156,.07);
+  border: 1px solid var(--t-border-strong);
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: all .2s;
+  margin-top: 12px;
+}
+.t-reopen-btn:hover {
+  background: rgba(0,255,156,.13);
+  box-shadow: 0 0 18px rgba(0,255,156,.15);
+}
+.t-title { flex: 1; text-align: center; font-family: 'JetBrains Mono', monospace; color: var(--t-gray); font-size: 12px; }
+.t-title b { color: #d6d6d6; font-weight: 500; }
+.t-toggle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--t-gray-dim);
+  background: none;
+  border: 1px solid var(--t-border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  color: var(--t-green);
+  transition: all .18s;
+}
+.t-toggle:hover { border-color: var(--t-green); background: rgba(0,255,156,.06); }
+
+/* screen */
+.t-screen {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--t-green);
+  text-shadow: 0 0 5px rgba(0,255,156,.1);
+  padding: 18px 22px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.t-screen.expanded { height: 380px; }
+.t-screen::-webkit-scrollbar { width: 6px; }
+.t-screen::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 6px; }
+
+.t-line { display: flex; gap: 10px; white-space: pre-wrap; align-items: flex-start; }
+.t-prompt { color: var(--t-green-dim); flex-shrink: 0; }
+.t-muted { color: var(--t-gray); }
+.t-dim { color: var(--t-gray-dim); }
+.t-accent { color: var(--t-yellow); }
+.t-ok { color: var(--t-green); }
+.t-err { color: #ff6b6b; }
+.t-comment { color: var(--t-gray-dim); font-style: italic; }
+.t-hr { height: 1px; background: var(--t-border); margin: 10px 0; }
+.t-spacer { height: 6px; }
+.t-section { color: var(--t-yellow); font-weight: 600; }
+
+/* cmdbar */
+.t-cmdbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 22px;
+  border-top: 1px solid var(--t-border);
+  background: #0c0c0c;
+}
+.t-cbtn {
+  appearance: none;
+  background: transparent;
+  color: var(--t-green);
+  border: 1px solid var(--t-border-strong);
+  border-radius: 6px;
+  padding: 5px 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .18s;
+}
+.t-cbtn .sq { color: var(--t-gray-dim); }
+.t-cbtn:hover {
+  border-color: var(--t-green);
+  box-shadow: 0 0 0 1px rgba(0,255,156,.2), 0 0 14px rgba(0,255,156,.12);
+  background: rgba(0,255,156,.04);
+}
+
+/* input row */
+.t-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px 14px;
+  border-top: 1px solid var(--t-border);
+}
+.t-input-row input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--t-green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  caret-color: var(--t-green);
+}
+.t-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 13px;
+  background: var(--t-green);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1.05s steps(2,start) infinite;
+  box-shadow: 0 0 8px rgba(0,255,156,.6);
+}
+@keyframes blink { to { opacity: 0; } }
+
+/* collapsed overlay — shown on titlebar when minimized */
+.cs-collapsed-hint {
+  display: none; /* no longer needed */
+}
+.cs-card.expanded .cs-collapsed-hint { display: none; }
+
+/* screen */
+.t-screen {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--t-green);
+  text-shadow: 0 0 5px rgba(0,255,156,.1);
+  padding: 18px 22px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.t-screen.expanded { height: 380px; }
+.t-screen::-webkit-scrollbar { width: 6px; }
+.t-screen::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 6px; }
+
+
+/* ─── LIGHT THEME ────────────────────────────────────── */
+body.light {
+  --bg: #f5f4f1;
+  --surface: #faf9f7;
+  --ink: #1a1a18;
+  --ink-2: #5a5a54;
+  --ink-3: #9a9a92;
+  --rule: rgba(26,26,24,.1);
+  --tag-bg: rgba(26,26,24,.06);
+  --tag-border: rgba(26,26,24,.14);
+  --accent: oklch(42% 0.16 160);
+  --accent-soft: oklch(42% 0.16 160 / 0.1);
+}
+body.light .navbar {
+  background: rgba(245,244,241,.88);
+  box-shadow: 0 2px 20px rgba(0,0,0,.06);
+}
+body.light .nav-link { color: #5a5a54; }
+body.light .nav-link:hover { background: rgba(26,26,24,.06); color: #1a1a18; }
+body.light .nav-link.active { background: #1a1a18; color: #f5f4f1; border: none; }
+body.light .motion-footer-shadow {
+  background: linear-gradient(to top, rgba(245,244,241,.95) 0%, transparent 100%);
+}
+body.light section::after {
+  background: linear-gradient(to top, rgba(26,26,24,.14) 0%, rgba(26,26,24,.04) 45%, transparent 100%);
+}
+body.light #about .headline { text-shadow: none; }
+body.light #about .headline em { text-shadow: none; color: oklch(42% 0.16 160); }
+body.light .chip { color: oklch(42% 0.16 160); border-color: oklch(42% 0.16 160 / 0.25); background: oklch(42% 0.16 160 / 0.06); }
+body.light .project-card { background: #faf9f7; border-color: rgba(26,26,24,.1); }
+body.light .project-card:hover { border-color: rgba(26,26,24,.22); box-shadow: 0 4px 24px rgba(0,0,0,.06); }
+body.light .p-tag { color: #9a9a92; border-color: rgba(26,26,24,.12); }
+body.light .skill-block { background: #faf9f7; border-color: rgba(26,26,24,.1); }
+body.light .sk-item { background: rgba(26,26,24,.06); color: #5a5a54; }
+body.light .metric-card { background: #faf9f7; border-color: rgba(26,26,24,.1); }
+body.light .metric-card .mk { color: #9a9a92; }
+body.light .metric-card .mv { color: #1a1a18; }
+body.light .metric-card .mv.green { color: oklch(42% 0.16 160); }
+body.light .metric-card .ms { color: #9a9a92; }
+body.light #contact .contact-line { border-color: rgba(26,26,24,.1); }
+body.light #contact .contact-line .c-label { color: #1a1a18; }
+body.light #contact .contact-line a { color: #5a5a54; }
+body.light #contact .contact-line a:hover { color: oklch(42% 0.16 160); }
+body.light .site-footer { color: #9a9a92; border-color: rgba(26,26,24,.1); }
+body.light::before { opacity: 0; } /* no scanlines in light mode */
+body.light::after  { opacity: 0; } /* no grain in light mode */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,.012) 0px,
+    rgba(255,255,255,.012) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: .3;
+  mix-blend-mode: overlay;
+}
+
+/* ─── FOOTER ─────────────────────────────────────────── */
+.site-footer {
+  background: var(--bg);
+  text-align: center;
+  padding: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  border-top: 1px solid var(--rule);
+  margin-bottom: 42px; /* space for docked terminal */
+}
+</style>
 </head>
 <body>
-  <div class="board-header">
-    <a href="index.html" class="nav-back">← toutes les maquettes</a>
-    <div class="kicker">Maquette 01 · direction A</div>
-    <h1 class="board-title">Classic terminal — single column</h1>
-    <p class="board-desc">
-      Interprétation fidèle du brief. Colonne unique, séquence de boot, commandes cliquables, panneau projet en overlay. Tout se passe dans un seul terminal. Visuellement le plus « pur ».
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="#about" class="nav-link active">about</a>
+  <a href="#projects" class="nav-link">projects</a>
+  <a href="#skills" class="nav-link">skills</a>
+  <a href="#metrics" class="nav-link">metrics</a>
+  <a href="#contact" class="nav-link">contact</a>
+  <button id="themeToggle" class="nav-theme-btn" aria-label="toggle theme">
+    <!-- Sun -->
+    <svg id="iconSun" class="theme-icon" viewBox="0 0 48 48" fill="none">
+      <g class="sun-rays">
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(0deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(45deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(90deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(135deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(180deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(225deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(270deg)"/>
+        <line class="sun-ray" x1="24" y1="6"  x2="24" y2="10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" style="transform-origin:24px 24px;transform:rotate(315deg)"/>
+      </g>
+      <circle class="sun-glow" cx="24" cy="24" r="8" fill="#FBBF24" opacity="0.2"/>
+      <circle cx="24" cy="24" r="8" stroke="#FBBF24" stroke-width="2" fill="none"/>
+    </svg>
+    <!-- Moon -->
+    <svg id="iconMoon" class="theme-icon" viewBox="0 0 48 48" fill="none">
+      <path d="M28 8a14 14 0 100 28 10 10 0 010-28z" fill="#A78BFA" opacity="0.15"/>
+      <path d="M28 8a14 14 0 100 28 10 10 0 010-28z" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <circle class="moon-star" cx="34" cy="10" r="1" fill="#A78BFA"/>
+      <circle class="moon-star" cx="38" cy="18" r="1" fill="#A78BFA"/>
+      <circle class="moon-star" cx="30" cy="6"  r="1" fill="#A78BFA"/>
+      <circle class="moon-star" cx="40" cy="12" r="1" fill="#A78BFA"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- MOTION FOOTER SHADOW -->
+<div class="motion-footer-shadow" id="mfs"></div>
+
+<!-- ══ VITRINE ══════════════════════════════════════════ -->
+<div class="vitrine">
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="s-label">// about</div>
+    <h1 class="headline">DevOps &<br>MLOps <em>engineer.</em></h1>
+    <p class="bio">
+      I design reproducible ML pipelines and keep them boring in production.
+      Six years shipping models from notebook to cluster — with observability
+      that lets me sleep at night.
     </p>
+    <div class="chip-row">
+      <span class="chip">Remote</span>
+      <span class="chip">Kubernetes</span>
+      <span class="chip">Terraform</span>
+      <span class="chip">Python · Go</span>
+      <span class="chip">Open to work</span>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="s-label">// projects</div>
+    <div class="project-grid">
+
+      <div class="project-card">
+        <div class="p-header">
+          <h3>toxic-ai</h3>
+          <span class="p-metric">uptime <strong>99.94%</strong></span>
+        </div>
+        <p class="tagline">Real-time toxic comment classifier served as a production microservice — trained, shipped, and monitored end-to-end.</p>
+        <div class="p-tags">
+          <span class="p-tag">FastAPI</span>
+          <span class="p-tag">PyTorch</span>
+          <span class="p-tag">Docker</span>
+          <span class="p-tag">MLflow</span>
+          <span class="p-tag">GH Actions</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="p-header">
+          <h3>fraud-detection</h3>
+          <span class="p-metric">uptime <strong>99.99%</strong></span>
+        </div>
+        <p class="tagline">Streaming fraud detection pipeline processing millions of events per day with sub-40ms latency.</p>
+        <div class="p-tags">
+          <span class="p-tag">Kafka</span>
+          <span class="p-tag">Spark</span>
+          <span class="p-tag">XGBoost</span>
+          <span class="p-tag">Airflow</span>
+          <span class="p-tag">Terraform</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="p-header">
+          <h3>air-quality</h3>
+          <span class="p-metric">uptime <strong>99.7%</strong></span>
+        </div>
+        <p class="tagline">IoT forecasting system with edge inference on Raspberry Pi clusters — Grafana dashboards surface trends to stakeholders.</p>
+        <div class="p-tags">
+          <span class="p-tag">TensorFlow</span>
+          <span class="p-tag">MQTT</span>
+          <span class="p-tag">Grafana</span>
+          <span class="p-tag">K3s</span>
+          <span class="p-tag">Helm</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="s-label">// skills</div>
+    <div class="skills-grid">
+      <div class="skill-block">
+        <div class="sk-label">Infrastructure</div>
+        <div class="sk-items">
+          <span class="sk-item">Kubernetes</span>
+          <span class="sk-item">Terraform</span>
+          <span class="sk-item">AWS</span>
+          <span class="sk-item">GCP</span>
+          <span class="sk-item">Helm</span>
+          <span class="sk-item">Argo CD</span>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="sk-label">MLOps</div>
+        <div class="sk-items">
+          <span class="sk-item">MLflow</span>
+          <span class="sk-item">Kubeflow</span>
+          <span class="sk-item">Airflow</span>
+          <span class="sk-item">DVC</span>
+          <span class="sk-item">BentoML</span>
+          <span class="sk-item">Feast</span>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="sk-label">Languages</div>
+        <div class="sk-items">
+          <span class="sk-item">Python</span>
+          <span class="sk-item">Go</span>
+          <span class="sk-item">Bash</span>
+          <span class="sk-item">TypeScript</span>
+        </div>
+      </div>
+      <div class="skill-block">
+        <div class="sk-label">Observability</div>
+        <div class="sk-items">
+          <span class="sk-item">Prometheus</span>
+          <span class="sk-item">Grafana</span>
+          <span class="sk-item">Loki</span>
+          <span class="sk-item">OpenTelemetry</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section id="metrics">
+    <div class="s-label">// metrics</div>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="mk">Total requests served</div>
+        <div class="mv">17M+</div>
+        <div class="ms">across 3 production services</div>
+      </div>
+      <div class="metric-card">
+        <div class="mk">Avg latency p95</div>
+        <div class="mv green">74ms</div>
+        <div class="ms">fraud-detection at 38ms</div>
+      </div>
+      <div class="metric-card">
+        <div class="mk">Avg uptime (30d)</div>
+        <div class="mv">99.88%</div>
+        <div class="ms">monitored via Prometheus</div>
+      </div>
+      <div class="metric-card">
+        <div class="mk">Models in production</div>
+        <div class="mv">3</div>
+        <div class="ms">PyTorch · XGBoost · LSTM</div>
+      </div>
+      <div class="metric-card">
+        <div class="mk">CI/CD pipelines</div>
+        <div class="mv green">8</div>
+        <div class="ms">GitHub Actions · ArgoCD</div>
+      </div>
+      <div class="metric-card">
+        <div class="mk">Infra as code</div>
+        <div class="mv">100%</div>
+        <div class="ms">Terraform · Helm charts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="s-label">// contact</div>
+    <div>
+      <div class="contact-line">
+        <span class="c-label">Email</span>
+        <a href="mailto:hi@peniel.dev">hi@peniel.dev</a>
+      </div>
+      <div class="contact-line">
+        <span class="c-label">GitHub</span>
+        <a href="#">github.com/peniel</a>
+      </div>
+      <div class="contact-line">
+        <span class="c-label">LinkedIn</span>
+        <a href="#">linkedin.com/in/peniel</a>
+      </div>
+      <div class="contact-line">
+        <span class="c-label">Calendar</span>
+        <a href="#">cal.com/peniel</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- FAB reopen button — shown when terminal is closed -->
+<button id="termReopenFab" class="t-reopen-btn" style="display:none;position:fixed;bottom:24px;right:24px;z-index:300">
+  <span style="margin-right:6px;opacity:.7">▲</span> open terminal
+</button>
+
+<!-- ══ TERMINAL — docked fixed bottom ══════════════════ -->
+<div class="terminal-zone">
+  <div class="cs-wrapper" id="csWrapper">
+    <div class="cs-card" id="csCard">
+
+      <!-- titlebar -->
+      <div class="t-titlebar">
+        <div class="t-dots">
+          <span class="t-dot red"    id="dotRed"    data-tip="close"></span>
+          <span class="t-dot yellow" id="dotYellow" data-tip="minimize"></span>
+          <span class="t-dot green"  id="dotGreen"  data-tip="expand"></span>
+        </div>
+        <div class="t-title"><b>peniel.dev</b> — terminal <span style="color:var(--t-gray-dim);font-size:10px;margin-left:6px;border:1px solid var(--t-border);padding:1px 7px;border-radius:20px">zsh</span></div>
+        <div id="tTitleStatus" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t-gray-dim)"></div>
+      </div>
+
+      <!-- screen -->
+      <div class="t-screen" id="tScreen"></div>
+
+      <!-- cmd bar -->
+      <div class="t-cmdbar" id="tCmdbar" style="display:none">
+        <button class="t-cbtn" data-cmd="about"><span class="sq">[</span>about<span class="sq">]</span></button>
+        <button class="t-cbtn" data-cmd="projects"><span class="sq">[</span>projects<span class="sq">]</span></button>
+        <button class="t-cbtn" data-cmd="skills"><span class="sq">[</span>skills<span class="sq">]</span></button>
+        <button class="t-cbtn" data-cmd="metrics"><span class="sq">[</span>metrics<span class="sq">]</span></button>
+        <button class="t-cbtn" data-cmd="contact"><span class="sq">[</span>contact<span class="sq">]</span></button>
+        <button class="t-cbtn" data-cmd="help"><span class="sq">[</span>help<span class="sq">]</span></button>
+        <button class="t-cbtn" data-cmd="clear"><span class="sq">[</span>clear<span class="sq">]</span></button>
+      </div>
+
+      <!-- input -->
+      <div class="t-input-row" id="tInputRow" style="display:none">
+        <span class="t-prompt">peniel@devops:~$</span>
+        <input id="tCli" autocomplete="off" spellcheck="false" />
+        <span class="t-cursor"></span>
+      </div>
+
+    </div>
   </div>
+</div>
 
-  <div class="board cols-2">
+<footer class="site-footer">peniel.dev · 2025</footer>
 
-    <!-- FRAME 01 — BOOT -->
-    <div class="frame">
-      <div class="frame-label">
-        <div><span class="num">01</span> · <span class="name">Boot state</span></div>
-        <div class="note">première frappe au clavier</div>
-      </div>
-      <div class="term">
-        <div class="titlebar">
-          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
-          <div class="status"><span class="live"></span>online</div>
-        </div>
-        <div class="screen">
-          <div class="row dim">&gt; booting system...</div>
-          <div class="row dim">&gt; loading modules... [kubernetes, prometheus, mlflow]</div>
-          <div class="row dim">&gt; initializing DevOps environment...</div>
-          <div class="row dim">&gt; connecting to ML services... <span class="ok">ok</span></div>
-          <div class="row accent">&gt; welcome to peniel.dev</div>
-          <div style="flex:1"></div>
-        </div>
-        <div class="input-row">
-          <span class="prompt">peniel@devops:~$</span>
-          <span class="val"></span>
-          <span class="cursor"></span>
-        </div>
-      </div>
-    </div>
+<script>
+/* ─── THEME TOGGLE ─────────────────────────────────────── */
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('portfolio-theme') || 'dark';
+if (savedTheme === 'light') document.body.classList.add('light');
+themeToggle.addEventListener('click', () => {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('portfolio-theme', isLight ? 'light' : 'dark');
+});
 
-    <!-- FRAME 02 — IDLE -->
-    <div class="frame">
-      <div class="frame-label">
-        <div><span class="num">02</span> · <span class="name">Idle — welcome</span></div>
-        <div class="note">accueil avec commandes cliquables</div>
-      </div>
-      <div class="term">
-        <div class="titlebar">
-          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
-          <div class="status"><span class="live"></span>online</div>
-        </div>
-        <div class="screen">
-          <div class="row dim">&gt; welcome to peniel.dev</div>
-          <div class="hr"></div>
-          <div class="welcome">welcome</div>
-          <div class="hint">
-            Click a command or type <span class="accent">help</span> to begin.
-            <span class="dim">(new here? try clicking <b>about</b>)</span>
-          </div>
-          <div class="cmdbar">
-            <span class="cbtn focused"><span class="sq">[</span>about<span class="sq">]</span></span>
-            <span class="cbtn"><span class="sq">[</span>projects<span class="sq">]</span></span>
-            <span class="cbtn"><span class="sq">[</span>skills<span class="sq">]</span></span>
-            <span class="cbtn"><span class="sq">[</span>metrics<span class="sq">]</span></span>
-            <span class="cbtn"><span class="sq">[</span>contact<span class="sq">]</span></span>
-          </div>
-          <div style="flex:1"></div>
-        </div>
-        <div class="input-row">
-          <span class="prompt">peniel@devops:~$</span>
-          <span class="val"></span>
-          <span class="cursor"></span>
-        </div>
-      </div>
-    </div>
+/* ─── NAVBAR ACTIVE STATE ──────────────────────────────── */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+const mfs = document.getElementById('mfs');
+let lastScrollY = 0;
 
-    <!-- FRAME 03 — PROJECTS TREE -->
-    <div class="frame">
-      <div class="frame-label">
-        <div><span class="num">03</span> · <span class="name">Projects — file tree</span></div>
-        <div class="note">après commande « projects »</div>
-      </div>
-      <div class="term">
-        <div class="titlebar">
-          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
-          <div class="status"><span class="live"></span>online</div>
-        </div>
-        <div class="screen">
-          <div class="row"><span class="prompt">peniel@devops:~$</span><span>projects</span></div>
-          <div class="tree" style="margin-top:8px">
-            <div class="root">projects/</div>
-            <div class="muted"> ├── <span class="name hover">toxic-ai</span><span class="tag2">NLP · FastAPI</span></div>
-            <div class="muted"> ├── <span class="name">fraud-detection</span><span class="tag2">streaming · XGBoost</span></div>
-            <div class="muted"> └── <span class="name">air-quality</span><span class="tag2">IoT · LSTM</span></div>
-          </div>
-          <div class="dim" style="margin-top:10px; font-size:12.5px">click a project to open it.</div>
-          <div style="flex:1"></div>
-        </div>
-        <div class="input-row">
-          <span class="prompt">peniel@devops:~$</span>
-          <span class="val"></span>
-          <span class="cursor"></span>
-        </div>
-      </div>
-    </div>
+function onScroll() {
+  const sy = window.scrollY;
+  const vh = window.innerHeight;
 
-    <!-- FRAME 04 — PROJECT PANEL -->
-    <div class="frame">
-      <div class="frame-label">
-        <div><span class="num">04</span> · <span class="name">Project view</span></div>
-        <div class="note">panneau superposé dans le terminal</div>
-      </div>
-      <div class="term">
-        <div class="titlebar">
-          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
-          <div class="status"><span class="live"></span>online</div>
-        </div>
-        <div class="screen">
-          <div class="row"><span class="prompt">peniel@devops:~$</span><span>open toxic-ai</span></div>
-          <div class="panel">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <h3>toxic-ai</h3>
-              <span class="dim" style="font-size:11px">[ esc ]</span>
-            </div>
-            <p class="desc">Real-time toxic comment classifier. FastAPI + PyTorch, Docker + GH Actions, monitored with Prometheus.</p>
-            <div class="tags">
-              <span class="tag">FastAPI</span>
-              <span class="tag">Docker</span>
-              <span class="tag">PyTorch</span>
-              <span class="tag">MLflow</span>
-            </div>
-            <div class="actions">
-              <span class="cbtn"><span class="sq">[</span>run<span class="sq">]</span></span>
-              <span class="cbtn"><span class="sq">[</span>github<span class="sq">]</span></span>
-              <span class="cbtn"><span class="sq">[</span>architecture<span class="sq">]</span></span>
-            </div>
-            <div class="metrics3">
-              <div class="metric"><div class="k">requests served</div><div class="v">12,480</div></div>
-              <div class="metric"><div class="k">latency (p95)</div><div class="v accent">120 ms</div></div>
-              <div class="metric"><div class="k">uptime (30d)</div><div class="v">99.94%</div></div>
-            </div>
-          </div>
-        </div>
-        <div class="input-row">
-          <span class="prompt">peniel@devops:~$</span>
-          <span class="val"></span>
-          <span class="cursor"></span>
-        </div>
-      </div>
-    </div>
+  // active nav
+  let cur = '';
+  sections.forEach(s => {
+    if (sy >= s.offsetTop - 160) cur = s.id;
+  });
+  navLinks.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + cur);
+  });
 
-    <!-- FRAME 05 — RUN STATE -->
-    <div class="frame">
-      <div class="frame-label">
-        <div><span class="num">05</span> · <span class="name">Run command</span></div>
-        <div class="note">prédiction simulée</div>
-      </div>
-      <div class="term">
-        <div class="titlebar">
-          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
-          <div class="status"><span class="live"></span>online</div>
-        </div>
-        <div class="screen">
-          <div class="row"><span class="prompt">peniel@devops:~$</span><span>run toxic-ai</span></div>
-          <div class="runbox">
-            <div class="label">Enter text:</div>
-            <div class="row"><span class="prompt">&gt;</span><span class="value">This is a test message</span></div>
-            <div class="pred">
-              prediction: <b>toxic</b>
-              <span class="badge">0.87</span>
-            </div>
-          </div>
-          <div style="flex:1"></div>
-        </div>
-        <div class="input-row">
-          <span class="prompt">peniel@devops:~$</span>
-          <span class="val"></span>
-          <span class="cursor"></span>
-        </div>
-      </div>
-    </div>
+  // motion footer shadow — per section
+  sections.forEach(s => {
+    const rect = s.getBoundingClientRect();
+    const sHeight = s.offsetHeight;
+    // how far we've scrolled through the section (0 = top visible, 1 = bottom at viewport bottom)
+    const progress = 1 - (rect.bottom / (sHeight + vh));
+    // activate shadow when we're in the bottom 35% of the section
+    const active = progress > 0.45;
+    s.classList.toggle('shadow-active', active);
+    if (active) {
+      // scale the shadow height based on how deep we are
+      const depth = Math.min(1, (progress - 0.45) / 0.3);
+      s.style.setProperty('--shadow-depth', depth);
+    }
+  });
 
-    <!-- FRAME 06 — METRICS -->
-    <div class="frame">
-      <div class="frame-label">
-        <div><span class="num">06</span> · <span class="name">Metrics</span></div>
-        <div class="note">état du service en production</div>
-      </div>
-      <div class="term">
-        <div class="titlebar">
-          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
-          <div class="titletxt"><b>peniel.dev</b> — terminal <span class="pill">zsh</span></div>
-          <div class="status"><span class="live"></span>online</div>
-        </div>
-        <div class="screen">
-          <div class="row"><span class="prompt">peniel@devops:~$</span><span>metrics</span></div>
-          <div style="margin-top:8px">
-            <div class="muted">API status: <span class="ok">online</span></div>
-            <div class="muted">requests:   <span class="accent">1,240</span></div>
-            <div class="muted">latency:    <span class="accent">120 ms</span></div>
-            <div class="muted">errors:     <span class="accent">0.2%</span></div>
-          </div>
-          <div style="flex:1"></div>
-        </div>
-        <div class="input-row">
-          <span class="prompt">peniel@devops:~$</span>
-          <span class="val"></span>
-          <span class="cursor"></span>
-        </div>
-      </div>
-    </div>
+  // global bottom fade (motion footer shadow element)
+  mfs.classList.toggle('visible', sy > 80);
 
-  </div>
+  lastScrollY = sy;
+}
+
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+/* ─── CONTAINER SCROLL ANIMATION ──────────────────────── */
+const csCard = document.getElementById('csCard');
+const csWrapper = document.getElementById('csWrapper');
+const tCmdbar = document.getElementById('tCmdbar');
+const tInputRow = document.getElementById('tInputRow');
+const tScreen = document.getElementById('tScreen');
+const tCli = document.getElementById('tCli');
+const tTitleStatus = document.getElementById('tTitleStatus');
+
+const dotRed    = document.getElementById('dotRed');
+const dotYellow = document.getElementById('dotYellow');
+const dotGreen  = document.getElementById('dotGreen');
+const termReopenFab = document.getElementById('termReopenFab');
+
+// states: 'closed' | 'minimized' | 'expanded'
+let termState = 'minimized';
+
+function setDotState(state) {
+  dotRed.classList.remove('disabled');
+  dotYellow.classList.toggle('disabled', state === 'closed' || state === 'minimized');
+  dotGreen.classList.toggle('disabled', state === 'expanded');
+  dotRed.dataset.tip    = 'close';
+  dotYellow.dataset.tip = state === 'expanded' ? 'minimize' : 'minimized';
+  dotGreen.dataset.tip  = state === 'expanded' ? 'expanded' : 'expand';
+}
+
+function expandTerminal() {
+  termState = 'expanded';
+  csCard.style.transform = '';
+  csCard.style.transition = '';
+  csCard.classList.add('expanded');
+  csCard.classList.remove('closed');
+  csCard.style.cursor = 'default';
+  tScreen.classList.add('expanded');
+  tCmdbar.style.display = '';
+  tInputRow.style.display = '';
+  tTitleStatus.textContent = '● running';
+  document.body.style.paddingBottom = '108px';
+  setDotState('expanded');
+  setTimeout(() => tCli.focus(), 400);
+}
+
+function minimizeTerminal() {
+  termState = 'minimized';
+  csCard.style.transform = '';
+  csCard.style.transition = '';
+  csCard.classList.remove('expanded');
+  csCard.classList.remove('closed');
+  termReopenFab.style.display = 'none';
+  csCard.style.cursor = 'pointer';
+  tScreen.classList.remove('expanded');
+  tCmdbar.style.display = 'none';
+  tInputRow.style.display = 'none';
+  tTitleStatus.textContent = '';
+  document.body.style.paddingBottom = '108px';
+  setDotState('minimized');
+}
+
+function closeTerminal() {
+  termState = 'closed';
+  csCard.style.transform = '';
+  csCard.style.transition = '';
+  csCard.classList.remove('expanded');
+  csCard.classList.add('closed');
+  tCmdbar.style.display = 'none';
+  tInputRow.style.display = 'none';
+  tTitleStatus.textContent = '';
+  document.body.style.paddingBottom = '0';
+  setDotState('closed');
+  termReopenFab.style.display = '';
+}
+
+function reopenHandler(e) {
+  e.stopPropagation();
+  minimizeTerminal();
+}
+
+function reopenTerminal() {
+  minimizeTerminal();
+}
+
+termReopenFab.addEventListener('click', () => minimizeTerminal());
+
+// dot click handlers
+dotRed.addEventListener('click', e => {
+  e.stopPropagation();
+  if (termState !== 'closed') closeTerminal();
+});
+dotYellow.addEventListener('click', e => {
+  e.stopPropagation();
+  if (termState === 'expanded') minimizeTerminal();
+});
+dotGreen.addEventListener('click', e => {
+  e.stopPropagation();
+  if (termState === 'minimized') {
+    expandTerminal();
+    if (tScreen.children.length === 0) bootSequence();
+  }
+});
+
+// click on titlebar when minimized → expand
+csCard.addEventListener('click', e => {
+  if (termState !== 'minimized') return;
+  expandTerminal();
+  if (tScreen.children.length === 0) bootSequence();
+});
+
+// init
+setDotState('minimized');
+
+/* ─── TERMINAL LOGIC ───────────────────────────────────── */
+const projects = {
+  'toxic-ai': {
+    title: 'toxic-ai',
+    desc: 'Real-time toxic comment classifier served via FastAPI. PyTorch backbone trained on Jigsaw dataset.',
+    tags: ['FastAPI 0.111', 'PyTorch 2.3', 'Docker 26', 'MLflow 2.13', 'GH Actions'],
+    metrics: { requests: '12,480', latency: '120ms', uptime: '99.94%', errors: '0.2%' },
+    arch: `ingress:443 ──▶ fastapi:8000 ──▶ torchserve:7070
+                  │               │
+             prometheus:9090  postgres:5432
+                  │
+             grafana:3000`,
+    docker: `docker pull ghcr.io/peniel/toxic-ai:latest
+docker run -p 8000:8000 \\
+  -e MODEL_URI=mlflow://models/toxic-ai/prod \\
+  -e PROMETHEUS_PORT=9090 \\
+  ghcr.io/peniel/toxic-ai:latest`,
+    env: `MODEL_URI=mlflow://models/toxic-ai/prod
+DB_URL=postgresql://user:***@pg:5432/toxicai
+PROMETHEUS_PORT=9090
+LOG_LEVEL=info
+DEVICE=cuda`,
+    git: `d3f1a2c feat: add confidence threshold env var
+b8e09f1 fix: memory leak in batch inference
+a77c3e0 ci: add GPU smoke test to pipeline`
+  },
+  'fraud-detection': {
+    title: 'fraud-detection',
+    desc: 'Streaming fraud detection pipeline. Kafka + Spark Structured Streaming. XGBoost re-trained nightly with Airflow.',
+    tags: ['Kafka 3.7', 'Spark 3.5', 'XGBoost 2.1', 'Airflow 2.9', 'Terraform 1.8'],
+    metrics: { requests: '4.2M/day', latency: '38ms', uptime: '99.99%', errors: '0.04%' },
+    arch: `events ──▶ kafka:9092 ──▶ spark-streaming
+                          │
+                   feature-store:6566
+                          │
+                 xgboost-serving:8080 ──▶ postgres
+                          │
+                        s3://fraud-features`,
+    docker: `docker pull ghcr.io/peniel/fraud-detection:latest
+docker run -p 8080:8080 \\
+  -e KAFKA_BROKERS=kafka:9092 \\
+  -e FEATURE_STORE_URI=redis://fs:6379 \\
+  -e MODEL_PATH=/models/xgb_v12.ubj \\
+  ghcr.io/peniel/fraud-detection:latest`,
+    env: `KAFKA_BROKERS=kafka:9092
+SPARK_MASTER=spark://master:7077
+FEATURE_STORE_URI=redis://fs:6379
+MODEL_PATH=/models/xgb_v12.ubj
+ALERT_THRESHOLD=0.82`,
+    git: `f91bc3a feat: bump model to v12, F1 0.97
+c3d02e1 ops: terraform add spot node group
+77aa81f fix: dedup key collision in feature store`
+  },
+  'air-quality': {
+    title: 'air-quality',
+    desc: 'IoT air-quality forecaster (LSTM) with geospatial features. Edge inference on k3s Raspberry Pi clusters.',
+    tags: ['TensorFlow 2.16', 'MQTT 5', 'Grafana 11', 'K3s 1.30', 'Helm 3.15'],
+    metrics: { requests: '820/min', latency: '64ms', uptime: '99.7%', errors: '0.1%' },
+    arch: `sensors ──▶ mqtt:1883 ──▶ k3s-edge (rpi-cluster)
+                   │            │
+            influxdb:8086   lstm-serving:8501
+                   │
+             grafana:3000 ──▶ dashboard`,
+    docker: `# edge node (ARM64)
+docker pull ghcr.io/peniel/air-quality-edge:latest-arm64
+docker run --device /dev/ttyUSB0 \\
+  -e MQTT_BROKER=mqtt:1883 \\
+  -e INFLUX_URL=http://influxdb:8086 \\
+  ghcr.io/peniel/air-quality-edge:latest-arm64`,
+    env: `MQTT_BROKER=mqtt:1883
+INFLUX_URL=http://influxdb:8086
+INFLUX_TOKEN=***
+LSTM_MODEL_PATH=/models/air_quality_v3.h5
+FORECAST_HORIZON=24h`,
+    git: `e2b9f31 feat: LSTM v3 — MAE -18% on PM2.5
+d190c82 ops: helm chart for k3s edge deploy
+b3a14cc fix: mqtt reconnect backoff on network drop`
+  }
+};
+
+function bootSequence() {
+  const lines = [
+    { t: '> booting peniel@devops...', cls: 't-dim' },
+    { t: '> kernel: Linux 6.6.32-k8s #1 SMP x86_64', cls: 't-dim' },
+    { t: '> loading modules: [kubelet, containerd, mlflow, prometheus]', cls: 't-dim' },
+    { t: '> mount: /dev/models → /mnt/mlflow ... ok', cls: 't-dim' },
+    { t: '> ssh tunnel established: 10.0.0.4:22 ↔ devops-cluster', cls: 't-dim' },
+    { t: '> env: KUBECONFIG=/home/peniel/.kube/config', cls: 't-dim' },
+    { t: '> context: gke_project_us-central1_prod-cluster', cls: 't-dim' },
+    { t: '─'.repeat(52), cls: 't-dim' },
+    { t: '> welcome, peniel. type help for commands.', cls: 't-ok' },
+  ];
+  let d = 80;
+  lines.forEach((l, i) => {
+    setTimeout(() => {
+      appendLine(l.t, l.cls);
+      if (i === lines.length - 1) appendLine('', '');
+    }, d);
+    d += i < 6 ? 220 : 120;
+  });
+}
+
+function appendLine(text, cls) {
+  const el = document.createElement('div');
+  el.className = 't-line ' + (cls || '');
+  el.textContent = text;
+  tScreen.appendChild(el);
+  tScreen.scrollTop = tScreen.scrollHeight;
+}
+
+function appendHTML(html) {
+  const el = document.createElement('div');
+  el.innerHTML = html;
+  tScreen.appendChild(el);
+  tScreen.scrollTop = tScreen.scrollHeight;
+  return el;
+}
+
+function echoCmd(cmd) {
+  appendHTML(`<div class="t-line"><span class="t-prompt">peniel@devops:~$</span><span>&nbsp;${cmd}</span></div>`);
+}
+
+function runCommand(raw) {
+  const cmd = (raw || '').trim().toLowerCase();
+  if (!cmd) return;
+  echoCmd(cmd);
+
+  if (cmd === 'help') {
+    appendHTML(`
+      <div class="t-line t-muted">available commands:</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">about</span>      — sys info + contact</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">projects</span>   — list all projects</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">open &lt;id&gt;</span>  — project detail + docker + env + git</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">skills</span>     — full stack + versions</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">metrics</span>    — live service metrics</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">contact</span>    — reach out</div>
+      <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent">clear</span>      — clear terminal</div>
+    `);
+  }
+
+  else if (cmd === 'about') {
+    appendHTML(`
+      <div class="t-line t-muted">whoami:</div>
+      <div class="t-line">&nbsp;&nbsp;peniel — DevOps / MLOps Engineer</div>
+      <div class="t-line t-muted">uname -a:</div>
+      <div class="t-line">&nbsp;&nbsp;Linux devops 6.6.32 #1 SMP x86_64 GNU/Linux</div>
+      <div class="t-line t-muted">uptime:</div>
+      <div class="t-line">&nbsp;&nbsp;6 years experience, currently: remote</div>
+      <div class="t-line t-muted">env | grep STACK:</div>
+      <div class="t-line">&nbsp;&nbsp;PRIMARY=kubernetes,terraform,python,go</div>
+      <div class="t-line">&nbsp;&nbsp;CLOUD=aws,gcp</div>
+      <div class="t-line">&nbsp;&nbsp;MLOPS=mlflow,kubeflow,airflow,bentoml</div>
+      <div class="t-line t-muted">cat /etc/contact:</div>
+      <div class="t-line">&nbsp;&nbsp;email: hi@peniel.dev</div>
+      <div class="t-line">&nbsp;&nbsp;gh:    github.com/peniel</div>
+    `);
+  }
+
+  else if (cmd === 'projects') {
+    const ids = Object.keys(projects);
+    let html = `<div class="t-line t-muted">ls ~/projects/</div>`;
+    ids.forEach((id, i) => {
+      const p = projects[id];
+      const prefix = i === ids.length - 1 ? '└──' : '├──';
+      html += `<div class="t-line"><span class="t-ok">&nbsp;${prefix} <span class="t-accent pclink" data-open="${id}" style="cursor:pointer;text-decoration:underline">${id}/</span></span><span class="t-dim">&nbsp;&nbsp;# ${p.desc.split('.')[0]}</span></div>`;
+    });
+    html += `<div class="t-line t-dim" style="margin-top:4px">&nbsp;→ type <span class="t-accent">open &lt;id&gt;</span> for full detail</div>`;
+    const blk = appendHTML(html);
+    blk.querySelectorAll('.pclink').forEach(n => {
+      n.addEventListener('click', () => runCommand('open ' + n.dataset.open));
+    });
+  }
+
+  else if (cmd.startsWith('open ')) {
+    const id = cmd.split(/\s+/)[1];
+    const p = projects[id];
+    if (!p) { appendHTML(`<div class="t-line t-err">no such project: ${id}</div>`); return; }
+
+    appendHTML(`
+      <div class="t-line"><span class="t-section">══ ${p.title} ══</span></div>
+      <div class="t-line t-muted"># ${p.desc}</div>
+      <div class="t-spacer"></div>
+
+      <div class="t-line t-dim">## tags</div>
+      <div class="t-line">&nbsp;&nbsp;${p.tags.map(t => `<span class="t-accent">${t}</span>`).join(' &nbsp;·&nbsp; ')}</div>
+      <div class="t-spacer"></div>
+
+      <div class="t-line t-dim">## metrics</div>
+      <div class="t-line">&nbsp;&nbsp;requests: <span class="t-ok">${p.metrics.requests}</span>&nbsp;&nbsp;latency: <span class="t-ok">${p.metrics.latency}</span>&nbsp;&nbsp;uptime: <span class="t-ok">${p.metrics.uptime}</span>&nbsp;&nbsp;errors: <span class="t-accent">${p.metrics.errors}</span></div>
+      <div class="t-spacer"></div>
+
+      <div class="t-line t-dim">## architecture</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t-gray);white-space:pre;padding:6px 16px;border-left:2px solid var(--t-border-strong);margin:4px 0">${p.arch}</div>
+      <div class="t-spacer"></div>
+
+      <div class="t-line t-dim">## docker</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t-green);white-space:pre;padding:6px 16px;background:rgba(0,255,156,.03);border-radius:4px;margin:4px 0">${p.docker}</div>
+      <div class="t-spacer"></div>
+
+      <div class="t-line t-dim">## env vars</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t-gray);white-space:pre;padding:6px 16px;border-left:2px solid var(--t-border);margin:4px 0">${p.env}</div>
+      <div class="t-spacer"></div>
+
+      <div class="t-line t-dim">## git log --oneline -3</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t-gray);white-space:pre;padding:6px 16px;margin:4px 0">${p.git}</div>
+    `);
+  }
+
+  else if (cmd === 'skills') {
+    appendHTML(`
+      <div class="t-line t-dim">## infra</div>
+      <div class="t-line">&nbsp;&nbsp;<span class="t-ok">kubernetes 1.30 · terraform 1.8 · aws · gcp · helm 3.15 · argo-cd 2.11</span></div>
+      <div class="t-line t-dim">## mlops</div>
+      <div class="t-line">&nbsp;&nbsp;<span class="t-ok">mlflow 2.13 · kubeflow 1.9 · airflow 2.9 · dvc 3.5 · bentoml 1.3 · feast 0.40</span></div>
+      <div class="t-line t-dim">## languages</div>
+      <div class="t-line">&nbsp;&nbsp;<span class="t-ok">python 3.12 · go 1.22 · bash 5.2 · typescript 5.4</span></div>
+      <div class="t-line t-dim">## observability</div>
+      <div class="t-line">&nbsp;&nbsp;<span class="t-ok">prometheus 2.52 · grafana 11.0 · loki 3.0 · opentelemetry 0.51</span></div>
+      <div class="t-line t-dim">## containers</div>
+      <div class="t-line">&nbsp;&nbsp;<span class="t-ok">docker 26 · containerd 1.7 · buildkit 0.14 · kaniko 1.23</span></div>
+    `);
+  }
+
+  else if (cmd === 'metrics') {
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    appendHTML(`
+      <div class="t-line t-dim">## kubectl top pods --all-namespaces  (${now})</div>
+      <div class="t-line"><span class="t-muted">NAMESPACE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MEMORY</span></div>
+      <div class="t-line"><span class="t-ok">mlops&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toxic-ai-6d9f4-xhk2p&nbsp;&nbsp;&nbsp;142m&nbsp;&nbsp;&nbsp;&nbsp;812Mi</span></div>
+      <div class="t-line"><span class="t-ok">mlops&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fraud-det-79c8b-n2kq7&nbsp;&nbsp;384m&nbsp;&nbsp;&nbsp;&nbsp;1.2Gi</span></div>
+      <div class="t-line"><span class="t-ok">iot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;air-quality-rpi-0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;61m&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;256Mi</span></div>
+      <div class="t-spacer"></div>
+      <div class="t-line t-dim">## prometheus query: avg(rate(http_requests_total[5m]))</div>
+      <div class="t-line">&nbsp;&nbsp;toxic-ai:        <span class="t-ok">14.2 req/s</span></div>
+      <div class="t-line">&nbsp;&nbsp;fraud-detection: <span class="t-ok">48.6 req/s</span></div>
+      <div class="t-line">&nbsp;&nbsp;air-quality:     <span class="t-ok">13.7 req/s</span></div>
+    `);
+  }
+
+  else if (cmd === 'contact') {
+    appendHTML(`
+      <div class="t-line t-dim">cat /etc/peniel/contact.env</div>
+      <div class="t-line">&nbsp;&nbsp;EMAIL=hi@peniel.dev</div>
+      <div class="t-line">&nbsp;&nbsp;GITHUB=github.com/peniel</div>
+      <div class="t-line">&nbsp;&nbsp;LINKEDIN=linkedin.com/in/peniel</div>
+      <div class="t-line">&nbsp;&nbsp;CALENDAR=cal.com/peniel</div>
+      <div class="t-line">&nbsp;&nbsp;TIMEZONE=UTC+1 (Paris)</div>
+      <div class="t-line">&nbsp;&nbsp;AVAILABILITY=open_to_work</div>
+    `);
+  }
+
+  else if (cmd === 'clear') {
+    tScreen.innerHTML = '';
+    appendLine('> terminal cleared.', 't-dim');
+    return;
+  }
+
+  else {
+    appendHTML(`<div class="t-line t-err">command not found: ${cmd} — try <span class="t-accent">help</span></div>`);
+  }
+
+  tScreen.scrollTop = tScreen.scrollHeight;
+}
+
+// cmd bar clicks
+document.querySelectorAll('#tCmdbar [data-cmd]').forEach(b => {
+  b.addEventListener('click', () => runCommand(b.dataset.cmd));
+});
+
+// cli input
+tCli.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const v = tCli.value;
+    tCli.value = '';
+    runCommand(v);
+  }
+});
+
+document.querySelector('.terminal-zone').addEventListener('click', e => {
+  if (termState === 'expanded' && e.target.closest('input') === null && e.target.closest('button') === null) {
+    tCli.focus();
+  }
+});
+
+/* ─── SCROLL-LINKED TERMINAL COLLAPSE ──────────────────── */
+const SCROLL_TO_MINIMIZE = 180;
+let isScrollAnimating = false;
+let scrollAcc = 0;
+
+window.addEventListener('wheel', e => {
+  if (termState !== 'expanded') return;
+  if (e.target.closest('#tScreen')) return;
+
+  const dy = e.deltaY;
+
+  if (dy < 0) {
+    scrollAcc = Math.min(SCROLL_TO_MINIMIZE, scrollAcc + Math.abs(dy));
+  } else {
+    scrollAcc = Math.max(0, scrollAcc - Math.abs(dy) * 1.5);
+  }
+
+  const p = scrollAcc / SCROLL_TO_MINIMIZE;
+  applyScrollProgress(p);
+
+  if (p >= 1) {
+    scrollAcc = 0;
+    csCard.style.transition = '';
+    minimizeTerminal();
+  } else if (p <= 0) {
+    csCard.style.transition = '';
+    csCard.style.transform = '';
+    scrollAcc = 0;
+  }
+}, { passive: true });
+
+function applyScrollProgress(p) {
+  if (p <= 0 || p >= 1) return;
+  const cardH = csCard.offsetHeight;
+  const peekH = 108;
+  const maxTranslateY = cardH - peekH;
+  const translateY = p * maxTranslateY;
+  const rotateX = p * 20;
+  const scale = 1 + p * 0.05;
+  csCard.style.transition = 'none';
+  csCard.style.transform = `translateY(${translateY}px) rotateX(${rotateX}deg) scale(${scale})`;
+}</script>
 </body>
 </html>

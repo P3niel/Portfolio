@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: training-job
+  namespace: portfolio
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: training
+    spec:
+      serviceAccountName: portfolio-sa
+      restartPolicy: Never
+      containers:
+        - name: training
+          image: portfolio-training:latest
+          env:
+            - name: MLFLOW_TRACKING_URI
+              valueFrom:
+                secretKeyRef:
+                  name: portfolio-api-secrets
+                  key: MLFLOW_TRACKING_URI
+            - name: MODEL_NAME
+              value: "portfolio-model"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"

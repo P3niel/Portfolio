@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-pipeline
+  namespace: portfolio
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: data-pipeline
+        spec:
+          serviceAccountName: portfolio-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: pipeline
+              image: portfolio-pipeline:latest
+              env:
+                - name: MLFLOW_TRACKING_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: portfolio-api-secrets
+                      key: MLFLOW_TRACKING_URI
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"

@@ -1,0 +1,49 @@
+# Replace DOMAIN_PLACEHOLDER with your actual domain before deploying.
+# Example: sed -i 's/DOMAIN_PLACEHOLDER/peniel.dev/g' patches/ingress-host.yaml
+#
+# Or set it via CI:
+#   VPS_DOMAIN=peniel.dev
+#   sed -i "s/DOMAIN_PLACEHOLDER/${VPS_DOMAIN}/g" k8s/overlays/production/patches/ingress-host.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portfolio-ingress
+  namespace: portfolio
+spec:
+  tls:
+    - hosts:
+        - api.DOMAIN_PLACEHOLDER
+        - mlflow.DOMAIN_PLACEHOLDER
+        - grafana.DOMAIN_PLACEHOLDER
+      secretName: portfolio-tls
+  rules:
+    - host: api.DOMAIN_PLACEHOLDER
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000
+    - host: mlflow.DOMAIN_PLACEHOLDER
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mlflow
+                port:
+                  number: 5000
+    - host: grafana.DOMAIN_PLACEHOLDER
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000

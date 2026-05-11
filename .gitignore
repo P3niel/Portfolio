@@ -1,0 +1,20 @@
+# Runtime
+.server.pid
+.server.log
+
+# Build artifacts
+frontend/tsconfig.tsbuildinfo
+
+# Local agent context
+.claude/
+.codex
+MEMOIRE_COLLECTIVE.md
+SUMMARY_SESSION.md
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
+*.swo
