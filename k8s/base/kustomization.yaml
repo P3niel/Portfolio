@@ -13,7 +13,7 @@ resources:
   - mlflow/service.yaml
   - mlflow/pvc.yaml
   - data-pipeline/cronjob.yaml
-  - training/job.yaml
+  # training/job.yaml — run manually: kubectl apply -f k8s/base/training/job.yaml
   - monitoring/prometheus-configmap.yaml
   - monitoring/prometheus-deployment.yaml
   - monitoring/prometheus-service.yaml
