@@ -61,7 +61,7 @@ jobs:
           cache-dependency-path: api/requirements.txt
 
       - name: Install deps
-        run: pip install -r api/requirements.txt pytest pytest-asyncio httpx
+        run: pip install -r requirements.txt pytest pytest-asyncio httpx
         working-directory: api
 
       - name: Run tests
