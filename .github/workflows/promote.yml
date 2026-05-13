@@ -6,6 +6,10 @@ on:
     # Daily at 6h UTC, after data pipeline (2h) + training (manual or triggered)
     - cron: "0 6 * * *"
 
+concurrency:
+  group: model-promotion
+  cancel-in-progress: false
+
 jobs:
   evaluate-and-promote:
     name: Compare & promote model
@@ -35,10 +39,9 @@ jobs:
 
       - name: Set kubeconfig
         if: steps.promote.outputs.promoted == 'true'
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: bash .github/scripts/write-kubeconfig.sh
 
       - name: Restart API deployment
         if: steps.promote.outputs.promoted == 'true'

@@ -1,15 +1,23 @@
 name: CD
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io
+  COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
 
 jobs:
   build-push:
     name: Build & push Docker images
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,11 +28,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA }}
 
       - name: Set image SHA and lowercase owner
         id: meta
         run: |
-          echo "sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+          echo "sha=${COMMIT_SHA::8}" >> "$GITHUB_OUTPUT"
           echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/login-action@v3
@@ -79,12 +89,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_SHA }}
 
       - name: Set kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: bash .github/scripts/write-kubeconfig.sh
 
       - name: Install kustomize
         run: |
