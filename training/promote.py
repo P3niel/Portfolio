@@ -8,6 +8,15 @@ MODEL_NAME = os.getenv("MODEL_NAME", "portfolio-model")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
 
+def _set_promoted_output(promoted: bool) -> None:
+    output_path = os.getenv("GITHUB_OUTPUT")
+    if not output_path:
+        return
+
+    with open(output_path, "a", encoding="utf-8") as output_file:
+        output_file.write(f"promoted={'true' if promoted else 'false'}\n")
+
+
 def _latest_version_for_stage(client: MlflowClient, stage: str):
     versions = [
         version
@@ -46,6 +55,7 @@ def main() -> None:
             stage="Production",
             archive_existing_versions=True,
         )
+        _set_promoted_output(True)
         print(
             f"Promoted Staging version {staging_version.version} to Production "
             f"(no existing Production version)"
@@ -61,12 +71,14 @@ def main() -> None:
             stage="Production",
             archive_existing_versions=True,
         )
+        _set_promoted_output(True)
         print(
             f"Promoted version {staging_version.version} to Production "
             f"({staging_accuracy:.4f} > {production_accuracy:.4f})"
         )
         return
 
+    _set_promoted_output(False)
     print(
         f"Kept Production version {production_version.version} "
         f"({production_accuracy:.4f} >= {staging_accuracy:.4f})"
