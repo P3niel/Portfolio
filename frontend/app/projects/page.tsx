@@ -1,4 +1,5 @@
 import { projects } from "@/lib/config";
+import Nav from "@/components/Nav";
 import ProjectCard from "@/components/projects/ProjectCard";
 
 export const metadata = {
@@ -9,6 +10,7 @@ export const metadata = {
 export default function ProjectsPage() {
   return (
     <div className="min-h-screen px-6 py-24">
+      <Nav />
       <div className="max-w-2xl mx-auto">
         <header className="mb-10">
           <p className="text-accent text-xs mb-2">

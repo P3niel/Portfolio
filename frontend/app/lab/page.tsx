@@ -1,5 +1,6 @@
 "use client";
 
+import Nav from "@/components/Nav";
 import useSWR from "swr";
 import { useRef, useState } from "react";
 import StatusBadge from "@/components/lab/StatusBadge";
@@ -95,6 +96,7 @@ export default function LabPage() {
 
   return (
     <div className="min-h-screen px-6 py-24">
+      <Nav />
       <div className="max-w-2xl mx-auto">
         <header className="mb-10 flex items-center justify-between">
           <div>

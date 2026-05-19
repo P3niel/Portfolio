@@ -1,4 +1,5 @@
 import { cv } from "@/lib/config";
+import Nav from "@/components/Nav";
 import CvHeader from "@/components/cv/CvHeader";
 import CvExperience from "@/components/cv/CvExperience";
 import CvSkills from "@/components/cv/CvSkills";
@@ -12,6 +13,7 @@ export const metadata = {
 export default function CvPage() {
   return (
     <div className="min-h-screen px-6 py-24">
+      <Nav />
       <div className="max-w-2xl mx-auto">
         <CvHeader />
         <CvExperience experiences={cv.experiences} />
