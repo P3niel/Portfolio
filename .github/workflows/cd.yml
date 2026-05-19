@@ -103,6 +103,14 @@ jobs:
             https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.3.0/kustomize_v5.3.0_linux_amd64.tar.gz
           tar -xzf /tmp/kustomize.tar.gz -C /usr/local/bin
 
+      - name: Wait for Kubernetes API
+        env:
+          RETRY_ATTEMPTS: "6"
+          RETRY_SLEEP_SECONDS: "10"
+        run: |
+          bash .github/scripts/retry.sh \
+            kubectl --request-timeout=15s get --raw=/readyz
+
       - name: Update image tags
         run: |
           cd k8s/overlays/production
@@ -112,7 +120,17 @@ jobs:
             portfolio-training=ghcr.io/${{ needs.build-push.outputs.owner }}/portfolio-training:${{ needs.build-push.outputs.sha }}
 
       - name: Apply manifests
-        run: kubectl apply -k k8s/overlays/production/
+        env:
+          RETRY_ATTEMPTS: "3"
+          RETRY_SLEEP_SECONDS: "15"
+        run: |
+          bash .github/scripts/retry.sh \
+            kubectl apply --validate=false -k k8s/overlays/production/
 
       - name: Wait for rollout
-        run: kubectl rollout status deployment/api -n portfolio --timeout=120s
+        env:
+          RETRY_ATTEMPTS: "3"
+          RETRY_SLEEP_SECONDS: "15"
+        run: |
+          bash .github/scripts/retry.sh \
+            kubectl rollout status deployment/api -n portfolio --timeout=180s

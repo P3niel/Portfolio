@@ -43,10 +43,29 @@ jobs:
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
         run: bash .github/scripts/write-kubeconfig.sh
 
+      - name: Wait for Kubernetes API
+        if: steps.promote.outputs.promoted == 'true'
+        env:
+          RETRY_ATTEMPTS: "6"
+          RETRY_SLEEP_SECONDS: "10"
+        run: |
+          bash .github/scripts/retry.sh \
+            kubectl --request-timeout=15s get --raw=/readyz
+
       - name: Restart API deployment
         if: steps.promote.outputs.promoted == 'true'
-        run: kubectl rollout restart deployment/api -n portfolio
+        env:
+          RETRY_ATTEMPTS: "3"
+          RETRY_SLEEP_SECONDS: "15"
+        run: |
+          bash .github/scripts/retry.sh \
+            kubectl rollout restart deployment/api -n portfolio
 
       - name: Wait for rollout
         if: steps.promote.outputs.promoted == 'true'
-        run: kubectl rollout status deployment/api -n portfolio --timeout=120s
+        env:
+          RETRY_ATTEMPTS: "3"
+          RETRY_SLEEP_SECONDS: "15"
+        run: |
+          bash .github/scripts/retry.sh \
+            kubectl rollout status deployment/api -n portfolio --timeout=180s
