@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, type FormEvent } from "react";
+import Link from "next/link";
 import { cv } from "@/lib/config";
 
 // ─── Terminal project data ────────────────────────────────────────────────────
@@ -16,7 +17,7 @@ const termProjects: Record<string, {
     tags: ["FastAPI 0.111", "PyTorch 2.3", "Docker 26", "MLflow 2.13", "GH Actions"],
     metrics: { requests: "12,480", latency: "120ms", uptime: "99.94%", errors: "0.2%" },
     arch: `ingress:443 ──▶ fastapi:8000 ──▶ torchserve:7070\n                  │               │\n             prometheus:9090  postgres:5432\n                  │\n             grafana:3000`,
-    docker: `docker pull ghcr.io/peniel/toxic-ai:latest\ndocker run -p 8000:8000 \\\n  -e MODEL_URI=mlflow://models/toxic-ai/prod \\\n  -e PROMETHEUS_PORT=9090 \\\n  ghcr.io/peniel/toxic-ai:latest`,
+    docker: `docker pull ghcr.io/p3niel/toxic-ai:latest\ndocker run -p 8000:8000 \\\n  -e MODEL_URI=mlflow://models/toxic-ai/prod \\\n  -e PROMETHEUS_PORT=9090 \\\n  ghcr.io/p3niel/toxic-ai:latest`,
     env: `MODEL_URI=mlflow://models/toxic-ai/prod\nDB_URL=postgresql://user:***@pg:5432/toxicai\nPROMETHEUS_PORT=9090\nLOG_LEVEL=info\nDEVICE=cuda`,
     git: `d3f1a2c feat: add confidence threshold env var\nb8e09f1 fix: memory leak in batch inference\na77c3e0 ci: add GPU smoke test to pipeline`,
   },
@@ -26,7 +27,7 @@ const termProjects: Record<string, {
     tags: ["Kafka 3.7", "Spark 3.5", "XGBoost 2.1", "Airflow 2.9", "Terraform 1.8"],
     metrics: { requests: "4.2M/day", latency: "38ms", uptime: "99.99%", errors: "0.04%" },
     arch: `events ──▶ kafka:9092 ──▶ spark-streaming\n                          │\n                   feature-store:6566\n                          │\n                 xgboost-serving:8080 ──▶ postgres\n                          │\n                        s3://fraud-features`,
-    docker: `docker pull ghcr.io/peniel/fraud-detection:latest\ndocker run -p 8080:8080 \\\n  -e KAFKA_BROKERS=kafka:9092 \\\n  -e FEATURE_STORE_URI=redis://fs:6379 \\\n  -e MODEL_PATH=/models/xgb_v12.ubj \\\n  ghcr.io/peniel/fraud-detection:latest`,
+    docker: `docker pull ghcr.io/p3niel/fraud-detection:latest\ndocker run -p 8080:8080 \\\n  -e KAFKA_BROKERS=kafka:9092 \\\n  -e FEATURE_STORE_URI=redis://fs:6379 \\\n  -e MODEL_PATH=/models/xgb_v12.ubj \\\n  ghcr.io/p3niel/fraud-detection:latest`,
     env: `KAFKA_BROKERS=kafka:9092\nSPARK_MASTER=spark://master:7077\nFEATURE_STORE_URI=redis://fs:6379\nMODEL_PATH=/models/xgb_v12.ubj\nALERT_THRESHOLD=0.82`,
     git: `f91bc3a feat: bump model to v12, F1 0.97\nc3d02e1 ops: terraform add spot node group\n77aa81f fix: dedup key collision in feature store`,
   },
@@ -36,11 +37,13 @@ const termProjects: Record<string, {
     tags: ["TensorFlow 2.16", "MQTT 5", "Grafana 11", "K3s 1.30", "Helm 3.15"],
     metrics: { requests: "820/min", latency: "64ms", uptime: "99.7%", errors: "0.1%" },
     arch: `sensors ──▶ mqtt:1883 ──▶ k3s-edge (rpi-cluster)\n                   │            │\n            influxdb:8086   lstm-serving:8501\n                   │\n             grafana:3000 ──▶ dashboard`,
-    docker: `# edge node (ARM64)\ndocker pull ghcr.io/peniel/air-quality-edge:latest-arm64\ndocker run --device /dev/ttyUSB0 \\\n  -e MQTT_BROKER=mqtt:1883 \\\n  -e INFLUX_URL=http://influxdb:8086 \\\n  ghcr.io/peniel/air-quality-edge:latest-arm64`,
+    docker: `# edge node (ARM64)\ndocker pull ghcr.io/p3niel/air-quality-edge:latest-arm64\ndocker run --device /dev/ttyUSB0 \\\n  -e MQTT_BROKER=mqtt:1883 \\\n  -e INFLUX_URL=http://influxdb:8086 \\\n  ghcr.io/p3niel/air-quality-edge:latest-arm64`,
     env: `MQTT_BROKER=mqtt:1883\nINFLUX_URL=http://influxdb:8086\nINFLUX_TOKEN=***\nLSTM_MODEL_PATH=/models/air_quality_v3.h5\nFORECAST_HORIZON=24h`,
     git: `e2b9f31 feat: LSTM v3 — MAE -18% on PM2.5\nd190c82 ops: helm chart for k3s edge deploy\nb3a14cc fix: mqtt reconnect backoff on network drop`,
   },
 };
+
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -79,21 +82,50 @@ export default function HomePage() {
     const hero = document.getElementById("about");
     const stage = heroStageRef.current;
     if (!hero || !stage) return;
+    let raf = 0;
 
     function updateHero() {
-      const rect = hero!.getBoundingClientRect();
-      const scrollable = hero!.offsetHeight - window.innerHeight;
-      const scrolled = -rect.top;
-      const p = Math.max(0, Math.min(1, scrolled / scrollable));
+      raf = 0;
+      const start = hero!.offsetTop;
+      const scrollable = Math.max(1, hero!.offsetHeight - window.innerHeight);
+      const scrolled = window.scrollY - start;
+      const p = clamp01(scrolled / scrollable);
+      const shadow = clamp01((p - 0.75) / 0.25);
+      const surface = 1 - Math.pow(1 - p, 1.12);
+      const surfaceOpacity = clamp01(1 - surface * 0.92);
+      const nameLinger = window.innerHeight * 0.5;
+      const nameFadeDistance = window.innerHeight * 0.45;
+      const nameExit = clamp01((scrolled - scrollable - nameLinger) / nameFadeDistance);
+      const nameProgress = Math.pow(p, 0.85);
+      const megaNameProgress = Math.pow(p, 0.9);
+      const nameFontSize = 11.5 + nameProgress * 2.6;
+      const megaNameGrow = megaNameProgress * 118;
       stage!.style.setProperty("--p", p.toFixed(4));
+      stage!.style.setProperty("--hero-copy-y", `${(-86 * surface).toFixed(2)}px`);
+      stage!.style.setProperty("--hero-card-y", `${(-72 * surface).toFixed(2)}px`);
+      stage!.style.setProperty("--hero-name-y", "0px");
+      stage!.style.setProperty("--hero-name-progress", nameProgress.toFixed(4));
+      stage!.style.setProperty("--hero-name-font-size", `${nameFontSize.toFixed(2)}px`);
+      stage!.style.setProperty("--hero-megatext-grow", `${megaNameGrow.toFixed(2)}px`);
+      stage!.style.setProperty("--hero-copy-opacity", surfaceOpacity.toFixed(4));
+      stage!.style.setProperty("--hero-card-opacity", surfaceOpacity.toFixed(4));
+      stage!.style.setProperty("--hero-name-opacity", clamp01(1 - nameExit).toFixed(4));
+      stage!.classList.toggle("hero-surface-cleared", p >= 0.995);
+      document.documentElement.style.setProperty("--hero-shadow", shadow.toFixed(4));
     }
 
-    window.addEventListener("scroll", updateHero, { passive: true });
-    window.addEventListener("resize", updateHero);
-    updateHero();
+    function scheduleHeroUpdate() {
+      if (raf) return;
+      raf = window.requestAnimationFrame(updateHero);
+    }
+
+    window.addEventListener("scroll", scheduleHeroUpdate, { passive: true });
+    window.addEventListener("resize", scheduleHeroUpdate);
+    scheduleHeroUpdate();
     return () => {
-      window.removeEventListener("scroll", updateHero);
-      window.removeEventListener("resize", updateHero);
+      window.removeEventListener("scroll", scheduleHeroUpdate);
+      window.removeEventListener("resize", scheduleHeroUpdate);
+      if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -101,10 +133,15 @@ export default function HomePage() {
   useEffect(() => {
     const sections = Array.from(document.querySelectorAll<HTMLElement>("section[id]"));
     const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>(".nav-link"));
+    const navbar = document.getElementById("navbar");
     const mfs = mfsRef.current;
+    let raf = 0;
 
-    function onScroll() {
+    function updateScrollState() {
+      raf = 0;
       const sy = window.scrollY;
+      const navBottom = navbar?.getBoundingClientRect().bottom ?? 64;
+      document.documentElement.style.setProperty("--scroll-shadow-edge", `${Math.round(navBottom)}px`);
 
       // active link
       let cur = "";
@@ -126,12 +163,22 @@ export default function HomePage() {
         }
       });
 
-      if (mfs) mfs.classList.toggle("visible", sy > 80);
+      if (mfs) mfs.classList.toggle("visible", sy > 8);
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    function scheduleScrollStateUpdate() {
+      if (raf) return;
+      raf = window.requestAnimationFrame(updateScrollState);
+    }
+
+    window.addEventListener("scroll", scheduleScrollStateUpdate, { passive: true });
+    window.addEventListener("resize", scheduleScrollStateUpdate);
+    scheduleScrollStateUpdate();
+    return () => {
+      window.removeEventListener("scroll", scheduleScrollStateUpdate);
+      window.removeEventListener("resize", scheduleScrollStateUpdate);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
   }, []);
 
   // ── terminal helpers ─────────────────────────────────────────────────────
@@ -189,7 +236,7 @@ export default function HomePage() {
         <div class="t-line">&nbsp;&nbsp;MLOPS=mlflow,kubeflow,airflow,bentoml</div>
         <div class="t-line t-muted">cat /etc/contact:</div>
         <div class="t-line">&nbsp;&nbsp;email: ${cv.contact.email}</div>
-        <div class="t-line">&nbsp;&nbsp;gh:    github.com/peniel</div>
+        <div class="t-line">&nbsp;&nbsp;gh:    github.com/P3niel</div>
       `);
     } else if (cmd === "projects") {
       const ids = Object.keys(termProjects);
@@ -263,7 +310,7 @@ export default function HomePage() {
         <div class="t-line">&nbsp;&nbsp;EMAIL=${cv.contact.email}</div>
         <div class="t-line">&nbsp;&nbsp;GITHUB=${cv.contact.github}</div>
         <div class="t-line">&nbsp;&nbsp;LINKEDIN=${cv.contact.linkedin}</div>
-        <div class="t-line">&nbsp;&nbsp;CALENDAR=cal.com/peniel</div>
+        <div class="t-line">&nbsp;&nbsp;CALENDAR=on_request</div>
         <div class="t-line">&nbsp;&nbsp;TIMEZONE=UTC+1 (Paris)</div>
         <div class="t-line">&nbsp;&nbsp;AVAILABILITY=open_to_work</div>
       `);
@@ -277,6 +324,23 @@ export default function HomePage() {
 
     if (tScreenRef.current) tScreenRef.current.scrollTop = tScreenRef.current.scrollHeight;
   }, [appendHTML, appendLine, echoCmd]);
+
+  const handleContactSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const replyTo = String(formData.get("email") || "").trim();
+    const subject = encodeURIComponent("Production systems inquiry");
+    const body = encodeURIComponent(
+      [
+        "Hi Peniel,",
+        "",
+        "I would like to discuss a DevOps / MLOps system.",
+        replyTo ? `Reply contact: ${replyTo}` : "",
+      ].filter(Boolean).join("\n")
+    );
+
+    window.location.href = `mailto:${cv.contact.email}?subject=${subject}&body=${body}`;
+  }, []);
 
   const bootSequence = useCallback(() => {
     if (bootedRef.current) return;
@@ -448,7 +512,7 @@ export default function HomePage() {
       const screen = tScreenRef.current;
       if (screen && (e.target as HTMLElement).closest("#t-screen")) return;
 
-      if (e.deltaY < 0) {
+      if (e.deltaY > 0) {
         scrollAccRef.current = Math.min(SCROLL_TO_MINIMIZE, scrollAccRef.current + Math.abs(e.deltaY));
       } else {
         scrollAccRef.current = Math.max(0, scrollAccRef.current - Math.abs(e.deltaY) * 1.5);
@@ -480,6 +544,7 @@ export default function HomePage() {
         <a href="#about" className="nav-link active">about</a>
         <a href="#projects" className="nav-link">projects</a>
         <a href="#skills" className="nav-link">skills</a>
+        <a href="#method" className="nav-link">method</a>
         <a href="#metrics" className="nav-link">metrics</a>
         <a href="#contact" className="nav-link">contact</a>
         <button
@@ -544,54 +609,58 @@ export default function HomePage() {
           </div>
           <div className="hero-floor" aria-hidden="true"></div>
           <div className="hero-hud-top">
-            <div className="hud-corner"><span className="hud-mark">●</span><span>FIG. 01 — PENIEL</span></div>
             <div className="hud-corner right"><span>STATUS</span><span className="hud-status">● ONLINE</span></div>
           </div>
+          <div className="hero-nameplate"><span>{cv.name}</span></div>
           <div className="hero-headline-wrap">
-            <div className="hero-label">&#47;&#47; model — devops engineer</div>
+            <div className="hero-label">&#47;&#47; model — devops / ml systems engineer</div>
             <h1 className="hero-headline">
-              DevOps &amp;<br/>
-              MLOps <em>engineer.</em>
+              I build ML systems<br/>
+              that survive <em>production constraints.</em>
             </h1>
             <p className="hero-bio">
-              I design reproducible ML pipelines and keep them boring in production.
-              Six years shipping models from notebook to cluster.
+              Not notebooks. Not demos.
+              <br />
+              Real pipelines designed for failure, drift, and scale.
+              <br />
+              <br />
+              I&apos;ve spent 6+ years in software engineering, now focused on DevOps &amp; MLOps systems in production environments.
             </p>
             <div className="hero-cta-row">
-              <a href="#projects" className="hero-cta primary">
-                <span>See work</span>
+              <Link href="/projects" className="hero-cta primary">
+                <span>Projects</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-              </a>
-              <a href="#contact" className="hero-cta">Get in touch</a>
+              </Link>
+              <Link href="/lab" className="hero-cta">Lab</Link>
+              <Link href="/cv" className="hero-cta">CV</Link>
+              <Link href="/projects/mlops-platform" className="hero-cta">MLOps case</Link>
+              <button className="hero-preview-card hero-video-cta" type="button">
+                <span className="preview-thumb">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </span>
+                <span className="preview-text">
+                  <span className="preview-eyebrow">WATCH</span>
+                  <span className="preview-title">3-min video</span>
+                </span>
+              </button>
             </div>
           </div>
           <div className="hero-spec-card">
             <div className="spec-header">
               <span className="spec-label">MODEL</span>
-              <span className="spec-code">PNL — 2024</span>
+              <span className="spec-code">PNL — 2026</span>
             </div>
             <div className="spec-body">
-              <div className="spec-row"><span>STACK</span><span>K8S · TF · PY · GO</span></div>
-              <div className="spec-row"><span>FOCUS</span><span>ML INFRA</span></div>
-              <div className="spec-row"><span>YEARS</span><span>6+</span></div>
-              <div className="spec-row"><span>BASE</span><span>REMOTE / EU</span></div>
-              <div className="spec-row"><span>STATUS</span><span className="ok">OPEN TO WORK</span></div>
-            </div>
-            <div className="spec-footer"><span>↳ updated 12.05.2026</span></div>
-          </div>
-          <div className="hero-preview-card">
-            <div className="preview-thumb">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            </div>
-            <div className="preview-text">
-              <div className="preview-eyebrow">WATCH</div>
-              <div className="preview-title">3-min intro</div>
+              <div className="spec-row"><span>STACK</span><span>K8S · PY · GO · TF</span></div>
+              <div className="spec-row"><span>FOCUS</span><span>ML SYSTEMS · RELIABILITY · OBSERVABILITY</span></div>
+              <div className="spec-row"><span>XP</span><span>6+ YEARS (SOFTWARE ENGINEERING)</span></div>
+              <div className="spec-row"><span>BASE</span><span>EU / REMOTE</span></div>
+              <div className="spec-row"><span>STATUS</span><span className="ok">AVAILABLE FOR SYSTEM WORK</span></div>
             </div>
           </div>
           <div className="hero-bottom-strip">
-            <span>● 6+ YEARS EXP</span>
-            <span>● BASED IN EU</span>
-            <span className="scroll-cue">SCROLL TO ZOOM OUT <span className="cue-arrow">↓</span></span>
+            <span>SYSTEM STATUS: STABLE</span>
+            <span className="scroll-cue">SCROLL TO ENTER INFRA LAYER <span className="cue-arrow">↓</span></span>
           </div>
         </div>
       </section>
@@ -602,10 +671,10 @@ export default function HomePage() {
           <div className="brutal-header">
             <div className="brutal-num">/03</div>
             <div className="brutal-title">SELECTED WORK</div>
-            <div className="brutal-meta">03 · ACTIVE</div>
+            <div className="brutal-meta">04 · ACTIVE</div>
           </div>
           <div className="proj-grid">
-            <a className="proj-cell" href="#">
+            <Link className="proj-cell" href="/projects/toxic-ai">
               <div className="proj-thumb">
                 <div className="thumb-overlay"></div>
                 <div className="thumb-content">
@@ -623,8 +692,8 @@ latency: 118ms`}</pre>
                 <div className="proj-sub">NLP · FASTAPI</div>
                 <div className="proj-arrow">↗</div>
               </div>
-            </a>
-            <a className="proj-cell" href="#">
+            </Link>
+            <Link className="proj-cell" href="/projects/fraud-detection">
               <div className="proj-thumb">
                 <div className="thumb-overlay"></div>
                 <div className="thumb-content">
@@ -644,8 +713,8 @@ latency: 118ms`}</pre>
                 <div className="proj-sub">STREAMING · XGB</div>
                 <div className="proj-arrow">↗</div>
               </div>
-            </a>
-            <a className="proj-cell" href="#">
+            </Link>
+            <Link className="proj-cell" href="/projects/air-quality">
               <div className="proj-thumb">
                 <div className="thumb-overlay"></div>
                 <div className="thumb-content">
@@ -671,8 +740,8 @@ latency: 118ms`}</pre>
                 <div className="proj-sub">IoT · LSTM</div>
                 <div className="proj-arrow">↗</div>
               </div>
-            </a>
-            <a className="proj-cell" href="#">
+            </Link>
+            <Link className="proj-cell" href="/projects/devops-lab">
               <div className="proj-thumb">
                 <div className="thumb-overlay"></div>
                 <div className="thumb-content">
@@ -696,7 +765,7 @@ latency: 118ms`}</pre>
                 <div className="proj-sub">OPEN SOURCE · CLI</div>
                 <div className="proj-arrow">↗</div>
               </div>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -725,6 +794,60 @@ latency: 118ms`}</pre>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* /04 OPERATING MODEL */}
+      <section id="method" className="brutal-section">
+        <div className="brutal-frame">
+          <div className="brutal-header">
+            <div className="brutal-num">/04</div>
+            <div className="brutal-title">OPERATING MODEL</div>
+            <div className="brutal-meta">FROM IDEA TO RUNBOOK</div>
+          </div>
+          <div className="method-grid">
+            {[
+              {
+                step: "01",
+                title: "Frame constraints",
+                body: "Clarify runtime target, failure modes, data freshness, security boundaries, and what must be visible on day one.",
+                signal: "inputs -> risk map",
+              },
+              {
+                step: "02",
+                title: "Ship a narrow path",
+                body: "Build the smallest deployable slice with health checks, typed config, rollback points, and a boring release path.",
+                signal: "commit -> deploy",
+              },
+              {
+                step: "03",
+                title: "Instrument behavior",
+                body: "Expose metrics, logs, traces, and model signals so the system can be judged from production evidence.",
+                signal: "runtime -> dashboard",
+              },
+              {
+                step: "04",
+                title: "Automate the handoff",
+                body: "Turn repeat work into CI/CD, scheduled jobs, runbooks, promotion gates, and dashboards a team can reuse.",
+                signal: "ops -> repeatable",
+              },
+            ].map((item) => (
+              <div className="method-cell" key={item.step}>
+                <div className="method-step">{item.step}</div>
+                <div className="method-title">{item.title}</div>
+                <p className="method-body">{item.body}</p>
+                <div className="method-signal">{item.signal}</div>
+              </div>
+            ))}
+          </div>
+          <Link href="/projects" className="method-proof method-roof" aria-label="View project case studies">
+            <span className="method-proof-label">OUTPUT</span>
+            <strong>deployable service · observable runtime · documented failure path</strong>
+            <span className="method-cta">
+              <span className="method-cta-text">case studies</span>
+              <span className="method-cta-arrow" aria-hidden="true">↗</span>
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -774,8 +897,8 @@ latency: 118ms`}</pre>
           <div className="contact-block">
             <div className="contact-col">
               <p className="contact-lead">Drop a line, a brief, or a shipping problem. Async-first, replies within 48h.</p>
-              <form className="contact-form" onSubmit={(e) => e.preventDefault()}>
-                <input type="email" placeholder="ENTER YOUR EMAIL" />
+              <form className="contact-form" onSubmit={handleContactSubmit}>
+                <input type="email" name="email" placeholder="ENTER YOUR EMAIL" />
                 <button type="submit">SEND <span className="btn-arrow">↗</span></button>
               </form>
               <div className="contact-tags">
@@ -793,17 +916,17 @@ latency: 118ms`}</pre>
                 </a>
                 <a className="contact-channel" href={cv.contact.github} target="_blank" rel="noopener noreferrer">
                   <span className="ch-label">GITHUB</span>
-                  <span className="ch-val">github.com/peniel</span>
+                  <span className="ch-val">github.com/P3niel</span>
                   <span className="ch-arrow">↗</span>
                 </a>
                 <a className="contact-channel" href={cv.contact.linkedin} target="_blank" rel="noopener noreferrer">
                   <span className="ch-label">LINKEDIN</span>
-                  <span className="ch-val">linkedin.com/in/peniel</span>
+                  <span className="ch-val">linkedin.com/in/peniel-mams</span>
                   <span className="ch-arrow">↗</span>
                 </a>
-                <a className="contact-channel" href="#">
-                  <span className="ch-label">CAL</span>
-                  <span className="ch-val">cal.com/peniel</span>
+                <a className="contact-channel" href="/cv">
+                  <span className="ch-label">CV</span>
+                  <span className="ch-val">profile, skills, experience</span>
                   <span className="ch-arrow">↗</span>
                 </a>
               </div>

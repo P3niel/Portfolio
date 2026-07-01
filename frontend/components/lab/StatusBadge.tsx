@@ -1,13 +1,15 @@
-type Status = "ok" | "offline" | "loading";
+type Status = "ok" | "demo" | "offline" | "loading";
 
 const styles: Record<Status, string> = {
   ok: "bg-accent/10 text-accent border-accent/30",
+  demo: "bg-yellow-400/10 text-yellow-300 border-yellow-400/30",
   offline: "bg-red-500/10 text-red-400 border-red-500/30",
   loading: "bg-ink-3/10 text-ink-3 border-rule",
 };
 
 const labels: Record<Status, string> = {
   ok: "● online",
+  demo: "◐ demo",
   offline: "○ offline",
   loading: "◌ loading",
 };

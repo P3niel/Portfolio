@@ -10,13 +10,13 @@ resources:
 # kustomize edit set image portfolio-api=ghcr.io/<owner>/portfolio-api:<sha>
 images:
   - name: portfolio-api
-    newName: ghcr.io/peniel/portfolio-api
+    newName: ghcr.io/p3niel/portfolio-api
     newTag: latest
   - name: portfolio-pipeline
-    newName: ghcr.io/peniel/portfolio-pipeline
+    newName: ghcr.io/p3niel/portfolio-pipeline
     newTag: latest
   - name: portfolio-training
-    newName: ghcr.io/peniel/portfolio-training
+    newName: ghcr.io/p3niel/portfolio-training
     newTag: latest
 
 patches:
