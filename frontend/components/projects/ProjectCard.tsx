@@ -20,9 +20,9 @@ export default function ProjectCard({ project }: { project: Project }) {
             {project.name}
           </h3>
         </div>
-        {project.featured && (
+        {(project.flagship || project.featured) && (
           <span className="shrink-0 border border-accent/30 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
-            featured
+            {project.flagship ? "projet phare" : "featured"}
           </span>
         )}
       </div>
