@@ -2,9 +2,11 @@ name: MLOps — Model Promotion
 
 on:
   workflow_dispatch:
-  schedule:
-    # Daily at 6h UTC, after data pipeline (2h) + training (manual or triggered)
-    - cron: "0 6 * * *"
+
+# Manual only while MLflow and k3s are intentionally offline to control costs.
+# Reactivation candidate, intentionally disabled:
+# schedule:
+#   - cron: "0 6 * * *"
 
 concurrency:
   group: model-promotion

@@ -21,14 +21,6 @@ export default function CvHeader() {
           </a>
         </div>
       </div>
-
-      <a
-        href="/cv.pdf"
-        download
-        className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded border border-rule text-ink-2 text-xs hover:border-accent hover:text-accent transition-colors"
-      >
-        ↓ Télécharger PDF
-      </a>
     </header>
   );
 }

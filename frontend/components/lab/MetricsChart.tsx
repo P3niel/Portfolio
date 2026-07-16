@@ -16,20 +16,21 @@ interface DataPoint {
 
 interface MetricsChartProps {
   data: DataPoint[];
+  bare?: boolean;
 }
 
-export default function MetricsChart({ data }: MetricsChartProps) {
+export default function MetricsChart({ data, bare = false }: MetricsChartProps) {
   if (data.length === 0) {
     return (
-      <div className="h-32 flex items-center justify-center text-ink-3 text-xs border border-rule rounded bg-surface">
+      <div className={`${bare ? "" : "border border-rule rounded bg-surface"} h-32 flex items-center justify-center text-ink-3 text-xs`}>
         En attente de données…
       </div>
     );
   }
 
   return (
-    <div className="p-4 rounded border border-rule bg-surface">
-      <h3 className="text-xs text-accent uppercase tracking-widest mb-3">Latency P99 (ms)</h3>
+    <div className={bare ? "" : "p-4 rounded border border-rule bg-surface"}>
+      {!bare && <h3 className="text-xs text-accent uppercase tracking-widest mb-3">Latency P99 (ms)</h3>}
       <ResponsiveContainer width="100%" height={120}>
         <LineChart data={data}>
           <XAxis

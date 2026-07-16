@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DEMO_RUNTIME_REASON, isDemoRuntime } from "@/lib/runtime-mode";
 
 interface LabEvent {
   time: string;
@@ -6,13 +7,42 @@ interface LabEvent {
   message: string;
 }
 
-const FALLBACK_EVENTS: LabEvent[] = [
-  { time: new Date().toISOString(), level: "info", message: "API service started" },
-  { time: new Date(Date.now() - 60000).toISOString(), level: "info", message: "Model v1.0.0 loaded from MLflow registry" },
-  { time: new Date(Date.now() - 120000).toISOString(), level: "info", message: "Health check passed" },
-];
+const TIMEOUT_MS = 2500;
+
+function fallbackEvents(error?: string) {
+  const now = Date.now();
+
+  return {
+    events: [
+      { time: new Date(now).toISOString(), level: "info", message: "Demo control plane ready" },
+      { time: new Date(now - 60000).toISOString(), level: "info", message: "Prediction probe completed on sample payload" },
+      { time: new Date(now - 120000).toISOString(), level: "info", message: "Model local-iris-1.0.0 loaded" },
+      { time: new Date(now - 180000).toISOString(), level: "warn", message: "Live Loki stream not configured" },
+    ] satisfies LabEvent[],
+    source: "demo",
+    upstream: null,
+    checked_at: new Date().toISOString(),
+    error,
+  };
+}
+
+async function fetchWithTimeout(url: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export async function GET() {
+  if (isDemoRuntime()) return NextResponse.json(fallbackEvents(DEMO_RUNTIME_REASON));
+
   const LOKI_URL = process.env.LOKI_URL;
 
   if (LOKI_URL) {
@@ -20,9 +50,8 @@ export async function GET() {
       const end = Date.now() * 1e6;
       const start = end - 3600 * 1e9;
       const query = encodeURIComponent('{namespace="portfolio", app="api"}');
-      const res = await fetch(
-        `${LOKI_URL}/loki/api/v1/query_range?query=${query}&start=${start}&end=${end}&limit=10&direction=backward`,
-        { next: { revalidate: 0 } }
+      const res = await fetchWithTimeout(
+        `${LOKI_URL}/loki/api/v1/query_range?query=${query}&start=${start}&end=${end}&limit=10&direction=backward`
       );
 
       if (res.ok) {
@@ -39,12 +68,19 @@ export async function GET() {
           )
           .slice(0, 10);
 
-        return NextResponse.json(events);
+        return NextResponse.json({
+          events,
+          source: "live",
+          upstream: LOKI_URL,
+          checked_at: new Date().toISOString(),
+        });
       }
-    } catch {
-      // fall through to static fallback
+    } catch (error) {
+      return NextResponse.json(
+        fallbackEvents(error instanceof Error ? error.message : "loki unavailable")
+      );
     }
   }
 
-  return NextResponse.json(FALLBACK_EVENTS);
+  return NextResponse.json(fallbackEvents("LOKI_URL not configured"));
 }

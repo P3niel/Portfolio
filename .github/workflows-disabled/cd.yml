@@ -1,4 +1,4 @@
-name: CD
+name: CD (disabled while k3s is offline)
 
 on:
   workflow_run:

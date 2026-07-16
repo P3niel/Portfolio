@@ -4,6 +4,12 @@
 
 # Build artifacts
 frontend/tsconfig.tsbuildinfo
+frontend/.next/
+terminal-portfolio/.next/
+
+# Python cache
+__pycache__/
+*.py[cod]
 
 # Local agent context
 .claude/

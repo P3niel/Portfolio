@@ -2,7 +2,7 @@
 APP_DIR       := frontend
 K8S_OVERLAY   := k8s/overlays/production
 REGISTRY      := ghcr.io
-IMAGE_OWNER   ?= peniel
+IMAGE_OWNER   ?= p3niel
 SERVER_PORT   := 8765
 PID_FILE      := .server.pid
 LOG_FILE      := .server.log
