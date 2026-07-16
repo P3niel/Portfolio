@@ -68,5 +68,6 @@ jobs:
         run: pytest tests/ -v --tb=short
         working-directory: api
         env:
-          MLFLOW_TRACKING_URI: "http://localhost:5000"
+          # Keep CI deterministic and offline while the shared MLflow service is stopped.
+          MLFLOW_TRACKING_URI: "file:///tmp/portfolio-ci-mlruns"
           MODEL_NAME: "portfolio-model"
