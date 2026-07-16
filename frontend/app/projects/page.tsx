@@ -4,7 +4,7 @@ import ProjectCard from "@/components/projects/ProjectCard";
 
 export const metadata = {
   title: "Projets — Peniel Teko-Agbo",
-  description: "Projets DevOps/MLOps : plateforme ML, CI/CD, Kubernetes.",
+  description: "Études de cas en backend, DevOps et observabilité des systèmes IA.",
 };
 
 export default function ProjectsPage() {
@@ -37,7 +37,7 @@ export default function ProjectsPage() {
               </div>
               <div className="p-3">
                 <p className="mb-1 text-ink-3">FOCUS</p>
-                <p className="text-accent">MLOPS</p>
+                <p className="text-accent">SYSTEMS</p>
               </div>
             </div>
           </div>
@@ -50,11 +50,11 @@ export default function ProjectsPage() {
           </div>
           <div>
             <p className="mb-2 font-mono uppercase tracking-[0.14em] text-accent">What it proves</p>
-            <p className="leading-6">DevOps and MLOps judgment beyond a notebook, landing page, or static GitHub README.</p>
+            <p className="leading-6">Backend, DevOps and AI-observability judgment beyond a landing page or static GitHub README.</p>
           </div>
           <div>
             <p className="mb-2 font-mono uppercase tracking-[0.14em] text-accent">Best entry</p>
-            <p className="leading-6">Start with MLOps Platform for the full deployment story, then inspect the lab surface.</p>
+            <p className="leading-6">Start with AI-Obs for the contract-first engineering story, then inspect the lab surface.</p>
           </div>
         </div>
 

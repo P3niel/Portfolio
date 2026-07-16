@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Peniel Teko-Agbo — DevOps / MLOps",
-  description: "Portfolio DevOps/MLOps : plateforme ML déployée sur k3s, CI/CD automatisé, monitoring Prometheus/Grafana.",
+  title: "Péniel Teko-Agbo — Backend, DevOps & IA",
+  description: "Portfolio de Péniel Teko-Agbo : développement backend, DevOps et observabilité des systèmes IA avec AI-Obs.",
 };
 
 export default function RootLayout({

@@ -2,48 +2,20 @@
 
 import { useEffect, useRef, useState, useCallback, type FormEvent } from "react";
 import Link from "next/link";
-import { cv } from "@/lib/config";
+import { cv, projects } from "@/lib/config";
 
-// ─── Terminal project data ────────────────────────────────────────────────────
-
-const termProjects: Record<string, {
-  title: string; desc: string; tags: string[];
-  metrics: { requests: string; latency: string; uptime: string; errors: string };
-  arch: string; docker: string; env: string; git: string;
-}> = {
-  "toxic-ai": {
-    title: "toxic-ai",
-    desc: "Real-time toxic comment classifier served via FastAPI. PyTorch backbone trained on Jigsaw dataset.",
-    tags: ["FastAPI 0.111", "PyTorch 2.3", "Docker 26", "MLflow 2.13", "GH Actions"],
-    metrics: { requests: "12,480", latency: "120ms", uptime: "99.94%", errors: "0.2%" },
-    arch: `ingress:443 ──▶ fastapi:8000 ──▶ torchserve:7070\n                  │               │\n             prometheus:9090  postgres:5432\n                  │\n             grafana:3000`,
-    docker: `docker pull ghcr.io/p3niel/toxic-ai:latest\ndocker run -p 8000:8000 \\\n  -e MODEL_URI=mlflow://models/toxic-ai/prod \\\n  -e PROMETHEUS_PORT=9090 \\\n  ghcr.io/p3niel/toxic-ai:latest`,
-    env: `MODEL_URI=mlflow://models/toxic-ai/prod\nDB_URL=postgresql://user:***@pg:5432/toxicai\nPROMETHEUS_PORT=9090\nLOG_LEVEL=info\nDEVICE=cuda`,
-    git: `d3f1a2c feat: add confidence threshold env var\nb8e09f1 fix: memory leak in batch inference\na77c3e0 ci: add GPU smoke test to pipeline`,
-  },
-  "fraud-detection": {
-    title: "fraud-detection",
-    desc: "Streaming fraud detection pipeline. Kafka + Spark Structured Streaming. XGBoost re-trained nightly with Airflow.",
-    tags: ["Kafka 3.7", "Spark 3.5", "XGBoost 2.1", "Airflow 2.9", "Terraform 1.8"],
-    metrics: { requests: "4.2M/day", latency: "38ms", uptime: "99.99%", errors: "0.04%" },
-    arch: `events ──▶ kafka:9092 ──▶ spark-streaming\n                          │\n                   feature-store:6566\n                          │\n                 xgboost-serving:8080 ──▶ postgres\n                          │\n                        s3://fraud-features`,
-    docker: `docker pull ghcr.io/p3niel/fraud-detection:latest\ndocker run -p 8080:8080 \\\n  -e KAFKA_BROKERS=kafka:9092 \\\n  -e FEATURE_STORE_URI=redis://fs:6379 \\\n  -e MODEL_PATH=/models/xgb_v12.ubj \\\n  ghcr.io/p3niel/fraud-detection:latest`,
-    env: `KAFKA_BROKERS=kafka:9092\nSPARK_MASTER=spark://master:7077\nFEATURE_STORE_URI=redis://fs:6379\nMODEL_PATH=/models/xgb_v12.ubj\nALERT_THRESHOLD=0.82`,
-    git: `f91bc3a feat: bump model to v12, F1 0.97\nc3d02e1 ops: terraform add spot node group\n77aa81f fix: dedup key collision in feature store`,
-  },
-  "air-quality": {
-    title: "air-quality",
-    desc: "IoT air-quality forecaster (LSTM) with geospatial features. Edge inference on k3s Raspberry Pi clusters.",
-    tags: ["TensorFlow 2.16", "MQTT 5", "Grafana 11", "K3s 1.30", "Helm 3.15"],
-    metrics: { requests: "820/min", latency: "64ms", uptime: "99.7%", errors: "0.1%" },
-    arch: `sensors ──▶ mqtt:1883 ──▶ k3s-edge (rpi-cluster)\n                   │            │\n            influxdb:8086   lstm-serving:8501\n                   │\n             grafana:3000 ──▶ dashboard`,
-    docker: `# edge node (ARM64)\ndocker pull ghcr.io/p3niel/air-quality-edge:latest-arm64\ndocker run --device /dev/ttyUSB0 \\\n  -e MQTT_BROKER=mqtt:1883 \\\n  -e INFLUX_URL=http://influxdb:8086 \\\n  ghcr.io/p3niel/air-quality-edge:latest-arm64`,
-    env: `MQTT_BROKER=mqtt:1883\nINFLUX_URL=http://influxdb:8086\nINFLUX_TOKEN=***\nLSTM_MODEL_PATH=/models/air_quality_v3.h5\nFORECAST_HORIZON=24h`,
-    git: `e2b9f31 feat: LSTM v3 — MAE -18% on PM2.5\nd190c82 ops: helm chart for k3s edge deploy\nb3a14cc fix: mqtt reconnect backoff on network drop`,
-  },
-};
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+
+const projectPreviews: Record<string, string> = {
+  "ai-obs": `[agent] ──event──> [trace]\n   └── quality gate: PASS\n       observability: ON`,
+  neuraldbg: `trace_042.breakpoint()\n  neuron path: inspect\n  mystery level: -73%`,
+  "devops-lab": `docker compose up -d\n  infra: reproducible\n  friday deploy: SAFE`,
+  portfolio: `next build -> preview\n  content: config-driven\n  backend: DEMO MODE`,
+  "toxic-ai": `signal ──> anomaly?\n  confidence: ███████░\n  model mood: curious`,
+  "infra-terraform-preprod": `terraform plan\n  aws preprod: OFF\n  cloud bill: protected`,
+  sentinelops: `cpu · ram · disk\n  anomalies: watching\n  sentinel status: READY`,
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -216,9 +188,10 @@ export default function HomePage() {
         <div class="t-line t-muted">available commands:</div>
         <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">about</span>      — sys info + contact</div>
         <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">projects</span>   — list all projects</div>
-        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">open &lt;id&gt;</span>  — project detail + docker + env + git</div>
-        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">skills</span>     — full stack + versions</div>
-        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">metrics</span>    — live service metrics</div>
+        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">open &lt;id&gt;</span>  — open a project page</div>
+        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">go &lt;page&gt;</span>  — home, cv, projects, lab or contact</div>
+        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">skills</span>     — skills from the CV</div>
+        <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">metrics</span>    — open the observability lab</div>
         <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">contact</span>    — reach out</div>
         <div class="t-line t-muted">&nbsp;&nbsp;<span class="t-accent-t">clear</span>      — clear terminal</div>
       `);
@@ -226,25 +199,21 @@ export default function HomePage() {
       appendHTML(`
         <div class="t-line t-muted">whoami:</div>
         <div class="t-line">&nbsp;&nbsp;${cv.name} — ${cv.title}</div>
-        <div class="t-line t-muted">uname -a:</div>
-        <div class="t-line">&nbsp;&nbsp;Linux devops 6.6.32 #1 SMP x86_64 GNU/Linux</div>
-        <div class="t-line t-muted">uptime:</div>
-        <div class="t-line">&nbsp;&nbsp;6 years experience, currently: remote</div>
-        <div class="t-line t-muted">env | grep STACK:</div>
-        <div class="t-line">&nbsp;&nbsp;PRIMARY=kubernetes,terraform,python,go</div>
-        <div class="t-line">&nbsp;&nbsp;CLOUD=aws,gcp</div>
-        <div class="t-line">&nbsp;&nbsp;MLOPS=mlflow,kubeflow,airflow,bentoml</div>
+        <div class="t-line t-muted">status:</div>
+        <div class="t-line">&nbsp;&nbsp;Étudiant en informatique · recherche une alternance</div>
+        <div class="t-line t-muted">focus:</div>
+        <div class="t-line">&nbsp;&nbsp;Backend · DevOps · IA · Observabilité</div>
         <div class="t-line t-muted">cat /etc/contact:</div>
         <div class="t-line">&nbsp;&nbsp;email: ${cv.contact.email}</div>
         <div class="t-line">&nbsp;&nbsp;gh:    github.com/P3niel</div>
       `);
     } else if (cmd === "projects") {
-      const ids = Object.keys(termProjects);
+      const ids = projects.map((project) => project.slug);
       let html = `<div class="t-line t-muted">ls ~/projects/</div>`;
       ids.forEach((id, i) => {
-        const p = termProjects[id];
+        const p = projects.find((project) => project.slug === id)!;
         const prefix = i === ids.length - 1 ? "└──" : "├──";
-        html += `<div class="t-line"><span class="t-ok">&nbsp;${prefix} <span class="t-accent-t pclink" data-open="${id}" style="cursor:pointer;text-decoration:underline">${id}/</span></span><span class="t-dim">&nbsp;&nbsp;# ${p.desc.split(".")[0]}</span></div>`;
+        html += `<div class="t-line"><span class="t-ok">&nbsp;${prefix} <span class="t-accent-t pclink" data-open="${id}" style="cursor:pointer;text-decoration:underline">${id}/</span></span><span class="t-dim">&nbsp;&nbsp;# ${p.shortDescription}</span></div>`;
       });
       html += `<div class="t-line t-dim" style="margin-top:4px">&nbsp;→ type <span class="t-accent-t">open &lt;id&gt;</span> for full detail</div>`;
       const blk = appendHTML(html);
@@ -253,57 +222,34 @@ export default function HomePage() {
       });
     } else if (cmd.startsWith("open ")) {
       const id = cmd.split(/\s+/)[1];
-      const p = termProjects[id];
+      const p = projects.find((project) => project.slug === id);
       if (!p) { appendHTML(`<div class="t-line t-err">no such project: ${id}</div>`); return; }
-      appendHTML(`
-        <div class="t-line"><span class="t-section">══ ${p.title} ══</span></div>
-        <div class="t-line t-muted"># ${p.desc}</div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## tags</div>
-        <div class="t-line">&nbsp;&nbsp;${p.tags.map((t) => `<span class="t-accent-t">${t}</span>`).join(" &nbsp;·&nbsp; ")}</div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## metrics</div>
-        <div class="t-line">&nbsp;&nbsp;requests: <span class="t-ok">${p.metrics.requests}</span>&nbsp;&nbsp;latency: <span class="t-ok">${p.metrics.latency}</span>&nbsp;&nbsp;uptime: <span class="t-ok">${p.metrics.uptime}</span>&nbsp;&nbsp;errors: <span class="t-accent-t">${p.metrics.errors}</span></div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## architecture</div>
-        <div style="font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:12px;color:var(--t-gray);white-space:pre;padding:6px 16px;border-left:2px solid var(--t-border-strong);margin:4px 0">${p.arch}</div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## docker</div>
-        <div style="font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:12px;color:var(--t-green);white-space:pre;padding:6px 16px;background:rgba(0,255,156,.03);border-radius:4px;margin:4px 0">${p.docker}</div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## env vars</div>
-        <div style="font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:12px;color:var(--t-gray);white-space:pre;padding:6px 16px;border-left:2px solid var(--t-border);margin:4px 0">${p.env}</div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## git log --oneline -3</div>
-        <div style="font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:12px;color:var(--t-gray);white-space:pre;padding:6px 16px;margin:4px 0">${p.git}</div>
-      `);
+      appendHTML(`<div class="t-line t-ok">opening /projects/${p.slug} ...</div>`);
+      window.location.href = `/projects/${p.slug}`;
+    } else if (cmd.startsWith("go ")) {
+      const page = cmd.split(/\s+/)[1];
+      const routes: Record<string, string> = {
+        home: "/", cv: "/cv", projects: "/projects", lab: "/lab", contact: "/#contact",
+        about: "/#about", skills: "/#skills",
+      };
+      const destination = routes[page];
+      if (!destination) {
+        appendHTML(`<div class="t-line t-err">unknown page: ${page} — try home, cv, projects, lab or contact</div>`);
+        return;
+      }
+      appendHTML(`<div class="t-line t-ok">opening ${destination} ...</div>`);
+      window.location.href = destination;
     } else if (cmd === "skills") {
-      appendHTML(`
-        <div class="t-line t-dim">## infra</div>
-        <div class="t-line">&nbsp;&nbsp;<span class="t-ok">kubernetes 1.30 · terraform 1.8 · aws · gcp · helm 3.15 · argo-cd 2.11</span></div>
-        <div class="t-line t-dim">## mlops</div>
-        <div class="t-line">&nbsp;&nbsp;<span class="t-ok">mlflow 2.13 · kubeflow 1.9 · airflow 2.9 · dvc 3.5 · bentoml 1.3 · feast 0.40</span></div>
-        <div class="t-line t-dim">## languages</div>
-        <div class="t-line">&nbsp;&nbsp;<span class="t-ok">python 3.12 · go 1.22 · bash 5.2 · typescript 5.4</span></div>
-        <div class="t-line t-dim">## observability</div>
-        <div class="t-line">&nbsp;&nbsp;<span class="t-ok">prometheus 2.52 · grafana 11.0 · loki 3.0 · opentelemetry 0.51</span></div>
-        <div class="t-line t-dim">## containers</div>
-        <div class="t-line">&nbsp;&nbsp;<span class="t-ok">docker 26 · containerd 1.7 · buildkit 0.14 · kaniko 1.23</span></div>
-      `);
+      appendHTML(cv.skills.map((group) => `
+        <div class="t-line t-dim">## ${group.category.toLowerCase()}</div>
+        <div class="t-line">&nbsp;&nbsp;<span class="t-ok">${group.items.join(" · ")}</span></div>
+      `).join(""));
     } else if (cmd === "metrics") {
-      const now = new Date().toISOString().replace("T", " ").slice(0, 19);
       appendHTML(`
-        <div class="t-line t-dim">## kubectl top pods --all-namespaces  (${now})</div>
-        <div class="t-line"><span class="t-muted">NAMESPACE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MEMORY</span></div>
-        <div class="t-line"><span class="t-ok">mlops&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toxic-ai-6d9f4-xhk2p&nbsp;&nbsp;&nbsp;142m&nbsp;&nbsp;&nbsp;&nbsp;812Mi</span></div>
-        <div class="t-line"><span class="t-ok">mlops&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fraud-det-79c8b-n2kq7&nbsp;&nbsp;384m&nbsp;&nbsp;&nbsp;&nbsp;1.2Gi</span></div>
-        <div class="t-line"><span class="t-ok">iot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;air-quality-rpi-0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;61m&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;256Mi</span></div>
-        <div class="t-spacer"></div>
-        <div class="t-line t-dim">## prometheus query: avg(rate(http_requests_total[5m]))</div>
-        <div class="t-line">&nbsp;&nbsp;toxic-ai:        <span class="t-ok">14.2 req/s</span></div>
-        <div class="t-line">&nbsp;&nbsp;fraud-detection: <span class="t-ok">48.6 req/s</span></div>
-        <div class="t-line">&nbsp;&nbsp;air-quality:     <span class="t-ok">13.7 req/s</span></div>
+        <div class="t-line t-dim">Runtime signals are exposed by the portfolio lab.</div>
+        <div class="t-line t-ok">opening /lab ...</div>
       `);
+      window.location.href = "/lab";
     } else if (cmd === "contact") {
       appendHTML(`
         <div class="t-line t-dim">cat /etc/peniel/contact.env</div>
@@ -346,13 +292,13 @@ export default function HomePage() {
     if (bootedRef.current) return;
     bootedRef.current = true;
     const lines = [
-      { t: "> booting peniel@devops...", cls: "t-dim" },
-      { t: "> kernel: Linux 6.6.32-k8s #1 SMP x86_64", cls: "t-dim" },
-      { t: "> loading modules: [kubelet, containerd, mlflow, prometheus]", cls: "t-dim" },
-      { t: "> mount: /dev/models → /mnt/mlflow ... ok", cls: "t-dim" },
-      { t: "> ssh tunnel established: 10.0.0.4:22 ↔ devops-cluster", cls: "t-dim" },
-      { t: "> env: KUBECONFIG=/home/peniel/.kube/config", cls: "t-dim" },
-      { t: "> context: k3s_prod-cluster_portfolio", cls: "t-dim" },
+      { t: "> booting peniel.portfolio...", cls: "t-dim" },
+      { t: "> loading routes: [home, cv, projects, lab, contact]", cls: "t-dim" },
+      { t: `> loading projects: [${projects.map((project) => project.slug).join(", ")}]`, cls: "t-dim" },
+      { t: "> loading profile: backend, devops, ia, observability", cls: "t-dim" },
+      { t: "> contact channels connected ... ok", cls: "t-dim" },
+      { t: "> project pages connected ... ok", cls: "t-dim" },
+      { t: "> portfolio context ready", cls: "t-dim" },
       { t: "─".repeat(52), cls: "t-dim" },
       { t: "> welcome, peniel. type help for commands.", cls: "t-ok" },
     ];
@@ -613,18 +559,18 @@ export default function HomePage() {
           </div>
           <div className="hero-nameplate"><span>{cv.name}</span></div>
           <div className="hero-headline-wrap">
-            <div className="hero-label">&#47;&#47; model — devops / ml systems engineer</div>
+            <div className="hero-label">&#47;&#47; backend · devops · ai observability</div>
             <h1 className="hero-headline">
-              I build ML systems<br/>
-              that survive <em>production constraints.</em>
+              I build software systems<br/>
+              designed for <em>real constraints.</em>
             </h1>
             <p className="hero-bio">
-              Not notebooks. Not demos.
+              From backend code to delivery workflows.
               <br />
-              Real pipelines designed for failure, drift, and scale.
+              Observable, documented, and built to be validated.
               <br />
               <br />
-              I&apos;ve spent 6+ years in software engineering, now focused on DevOps &amp; MLOps systems in production environments.
+              Computer science student focused on Python, DevOps, and AI observability, currently looking for a work-study opportunity.
             </p>
             <div className="hero-cta-row">
               <Link href="/projects" className="hero-cta primary">
@@ -633,7 +579,7 @@ export default function HomePage() {
               </Link>
               <Link href="/lab" className="hero-cta">Lab</Link>
               <Link href="/cv" className="hero-cta">CV</Link>
-              <Link href="/projects/mlops-platform" className="hero-cta">MLOps case</Link>
+              <Link href="/projects/ai-obs" className="hero-cta">Voir AI-Obs</Link>
               <button className="hero-preview-card hero-video-cta" type="button">
                 <span className="preview-thumb">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -651,15 +597,15 @@ export default function HomePage() {
               <span className="spec-code">PNL — 2026</span>
             </div>
             <div className="spec-body">
-              <div className="spec-row"><span>STACK</span><span>K8S · PY · GO · TF</span></div>
-              <div className="spec-row"><span>FOCUS</span><span>ML SYSTEMS · RELIABILITY · OBSERVABILITY</span></div>
-              <div className="spec-row"><span>XP</span><span>6+ YEARS (SOFTWARE ENGINEERING)</span></div>
-              <div className="spec-row"><span>BASE</span><span>EU / REMOTE</span></div>
-              <div className="spec-row"><span>STATUS</span><span className="ok">AVAILABLE FOR SYSTEM WORK</span></div>
+              <div className="spec-row"><span>STACK</span><span>PYTHON · API · DOCKER · TERRAFORM</span></div>
+              <div className="spec-row"><span>FOCUS</span><span>BACKEND · DEVOPS · OBSERVABILITÉ IA</span></div>
+              <div className="spec-row"><span>PARCOURS</span><span>ÉTUDIANT EN INFORMATIQUE</span></div>
+              <div className="spec-row"><span>BASE</span><span>FRANCE</span></div>
+              <div className="spec-row"><span>STATUS</span><span className="ok">RECHERCHE UNE ALTERNANCE</span></div>
             </div>
           </div>
           <div className="hero-bottom-strip">
-            <span>SYSTEM STATUS: STABLE</span>
+            <span>PORTFOLIO MODE: FRONTEND PUBLIC</span>
             <span className="scroll-cue">SCROLL TO ENTER INFRA LAYER <span className="cue-arrow">↓</span></span>
           </div>
         </div>
@@ -671,101 +617,25 @@ export default function HomePage() {
           <div className="brutal-header">
             <div className="brutal-num">/03</div>
             <div className="brutal-title">SELECTED WORK</div>
-            <div className="brutal-meta">04 · ACTIVE</div>
+            <div className="brutal-meta">{String(projects.length).padStart(2, "0")} · PROJECTS</div>
           </div>
           <div className="proj-grid">
-            <Link className="proj-cell" href="/projects/toxic-ai">
-              <div className="proj-thumb">
-                <div className="thumb-overlay"></div>
-                <div className="thumb-content">
-                  <pre className="thumb-code">{`> POST /classify
-{ "text": "..." }
-─────────────
-prediction: `}<span className="thumb-warn">toxic</span>{`
-score: 0.94
-latency: 118ms`}</pre>
-                </div>
-                <div className="thumb-grid"></div>
-              </div>
-              <div className="proj-meta">
-                <div className="proj-name">TOXIC_AI</div>
-                <div className="proj-sub">NLP · FASTAPI</div>
-                <div className="proj-arrow">↗</div>
-              </div>
-            </Link>
-            <Link className="proj-cell" href="/projects/fraud-detection">
-              <div className="proj-thumb">
-                <div className="thumb-overlay"></div>
-                <div className="thumb-content">
-                  <svg className="thumb-chart" viewBox="0 0 200 100" preserveAspectRatio="none">
-                    <polyline points="0,80 20,60 35,75 50,40 65,55 80,30 100,45 115,20 130,38 150,15 170,28 200,10" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-                    <polyline points="0,90 20,82 35,85 50,70 65,75 80,60 100,68 115,55 130,62 150,48 170,55 200,42" fill="none" stroke="currentColor" strokeWidth="1" opacity=".4"/>
-                    <circle cx="80" cy="30" r="2.5" fill="currentColor"/>
-                    <circle cx="115" cy="20" r="2.5" fill="currentColor"/>
-                    <circle cx="150" cy="15" r="2.5" fill="currentColor"/>
-                  </svg>
-                  <div className="thumb-stat"><span>EVENTS/D</span><span className="thumb-stat-val">4.2M</span></div>
-                </div>
-                <div className="thumb-grid"></div>
-              </div>
-              <div className="proj-meta">
-                <div className="proj-name">FRAUD_DETECTION</div>
-                <div className="proj-sub">STREAMING · XGB</div>
-                <div className="proj-arrow">↗</div>
-              </div>
-            </Link>
-            <Link className="proj-cell" href="/projects/air-quality">
-              <div className="proj-thumb">
-                <div className="thumb-overlay"></div>
-                <div className="thumb-content">
-                  <div className="thumb-nodes">
-                    <span className="node" style={{top:"18%",left:"24%"}}></span>
-                    <span className="node" style={{top:"34%",left:"62%"}}></span>
-                    <span className="node" style={{top:"52%",left:"38%"}}></span>
-                    <span className="node" style={{top:"68%",left:"78%"}}></span>
-                    <span className="node" style={{top:"42%",left:"14%"}}></span>
-                    <span className="node alert" style={{top:"24%",left:"80%"}}></span>
-                    <svg className="node-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      <line x1="24" y1="18" x2="62" y2="34"/><line x1="62" y1="34" x2="38" y2="52"/>
-                      <line x1="38" y1="52" x2="78" y2="68"/><line x1="14" y1="42" x2="38" y2="52"/>
-                      <line x1="62" y1="34" x2="80" y2="24"/>
-                    </svg>
+            {projects.filter((project) => project.featured).map((project) => (
+              <Link className="proj-cell" href={`/projects/${project.slug}`} key={project.slug}>
+                <div className="proj-thumb">
+                  <div className="thumb-overlay"></div>
+                  <div className="thumb-content">
+                    <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>
                   </div>
-                  <div className="thumb-stat"><span>EDGE NODES</span><span className="thumb-stat-val">42</span></div>
+                  <div className="thumb-grid"></div>
                 </div>
-                <div className="thumb-grid"></div>
-              </div>
-              <div className="proj-meta">
-                <div className="proj-name">AIR_QUALITY</div>
-                <div className="proj-sub">IoT · LSTM</div>
-                <div className="proj-arrow">↗</div>
-              </div>
-            </Link>
-            <Link className="proj-cell" href="/projects/devops-lab">
-              <div className="proj-thumb">
-                <div className="thumb-overlay"></div>
-                <div className="thumb-content">
-                  <div className="thumb-mark">
-                    <svg viewBox="0 0 100 100" width="64" height="64">
-                      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="1"/>
-                      <circle cx="50" cy="50" r="32" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="2 4"/>
-                      <circle cx="50" cy="50" r="14" fill="currentColor"/>
-                      <line x1="2" y1="50" x2="20" y2="50" stroke="currentColor"/>
-                      <line x1="80" y1="50" x2="98" y2="50" stroke="currentColor"/>
-                      <line x1="50" y1="2" x2="50" y2="20" stroke="currentColor"/>
-                      <line x1="50" y1="80" x2="50" y2="98" stroke="currentColor"/>
-                    </svg>
-                  </div>
-                  <div className="thumb-stat"><span>OS · LAB</span><span className="thumb-stat-val">v0.4</span></div>
+                <div className="proj-meta">
+                  <div className="proj-name">{project.name.toUpperCase()}</div>
+                  <div className="proj-sub">{project.tags.slice(0, 2).join(" · ").toUpperCase()}</div>
+                  <div className="proj-arrow">↗</div>
                 </div>
-                <div className="thumb-grid"></div>
-              </div>
-              <div className="proj-meta">
-                <div className="proj-name">DEVOPS_LAB</div>
-                <div className="proj-sub">OPEN SOURCE · CLI</div>
-                <div className="proj-arrow">↗</div>
-              </div>
-            </Link>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -853,36 +723,34 @@ latency: 118ms`}</pre>
 
       <div className="hatched-band" aria-hidden="true"></div>
 
-      {/* /05 SYSTEM STATUS */}
+      {/* /05 PORTFOLIO FEATURES */}
       <section id="metrics" className="brutal-section">
         <div className="brutal-frame">
           <div className="brutal-header">
             <div className="brutal-num">/05</div>
-            <div className="brutal-title">SYSTEM STATUS</div>
-            <div className="brutal-meta">LIVE · UTC+1</div>
+            <div className="brutal-title">PORTFOLIO FEATURES</div>
+            <div className="brutal-meta">IMPLEMENTED · VERIFIABLE</div>
           </div>
-          <div className="status-block">
+          <div className="grid gap-px bg-rule sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { label: "REQUESTS_SERVED", w: "84%", val: "17.2M", ok: false },
-              { label: "AVG_LATENCY_P95", w: "32%", val: "74 MS", ok: false },
-              { label: "UPTIME_30D",      w: "99%", val: "99.88%", ok: false },
-              { label: "MODELS_IN_PROD",  w: "50%", val: "03 / 06", ok: false },
-              { label: "CICD_PIPELINES",  w: "67%", val: "08", ok: false },
-              { label: "INFRA_AS_CODE",   w: "100%", val: "100%", ok: false },
-              { label: "NETWORK",         w: "100%", val: "SECURE", ok: true },
-            ].map((r) => (
-              <div className="status-row" key={r.label}>
-                <span className="status-label">{r.label}</span>
-                <div className="status-bar"><div className="status-fill" style={{ width: r.w }}></div></div>
-                <span className={`status-value${r.ok ? " ok" : ""}`}>{r.val}</span>
-              </div>
+              ["Interactive terminal", "Keyboard-friendly commands provide an optional discovery layer without replacing standard navigation."],
+              ["Config-driven content", "CV data, project cards and case studies share one typed source of truth."],
+              ["Project case studies", "Dedicated routes expose problems, architecture decisions, responsibilities and proof points."],
+              ["Controlled Runtime Lab", "Next.js proxies support live services while defaulting to clearly labelled sample payloads."],
+              ["Responsive frontend", "The portfolio adapts across mobile and desktop with accessible navigation and reduced-motion support."],
+              ["CI and previews", "GitHub Actions validates code while Vercel publishes a preview for every pull request."],
+            ].map(([title, description]) => (
+              <article className="min-w-0 bg-bg p-5" key={title}>
+                <h2 className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-accent">{title}</h2>
+                <p className="text-xs leading-6 text-ink-2">{description}</p>
+              </article>
             ))}
           </div>
-          <div className="status-banner">
-            <span className="banner-bar"></span>
-            <span className="banner-text">● ALL SYSTEMS OPERATIONAL</span>
-            <span className="banner-bar"></span>
-          </div>
+          <Link href="/projects/portfolio" className="method-proof method-roof" aria-label="Open the Portfolio case study">
+            <span className="method-proof-label">CASE STUDY</span>
+            <strong>frontend public · backend demo mode · infrastructure as code preserved</strong>
+            <span className="method-cta"><span className="method-cta-text">inspect portfolio</span><span className="method-cta-arrow" aria-hidden="true">↗</span></span>
+          </Link>
         </div>
       </section>
 
@@ -921,7 +789,7 @@ latency: 118ms`}</pre>
                 </a>
                 <a className="contact-channel" href={cv.contact.linkedin} target="_blank" rel="noopener noreferrer">
                   <span className="ch-label">LINKEDIN</span>
-                  <span className="ch-val">linkedin.com/in/peniel-mams</span>
+                  <span className="ch-val">Péniel Teko-Agbo</span>
                   <span className="ch-arrow">↗</span>
                 </a>
                 <a className="contact-channel" href="/cv">
@@ -965,7 +833,7 @@ latency: 118ms`}</pre>
             </div>
             <div className="t-screen" ref={tScreenRef} id="t-screen"></div>
             <div className="t-cmdbar" ref={tCmdbarRef} style={{ display: "none" }}>
-              {["about","projects","skills","metrics","contact","help","clear"].map((cmd) => (
+              {["about","projects","go cv","go lab","contact","help","clear"].map((cmd) => (
                 <button key={cmd} className="t-cbtn" data-cmd={cmd}>
                   <span className="sq">[</span>{cmd}<span className="sq">]</span>
                 </button>
@@ -974,7 +842,6 @@ latency: 118ms`}</pre>
             <div className="t-input-row" ref={tInputRowRef} style={{ display: "none" }}>
               <span className="t-prompt">peniel@devops:~$</span>
               <input ref={tCliRef} autoComplete="off" spellCheck={false} />
-              <span className="t-cursor"></span>
             </div>
           </div>
         </div>

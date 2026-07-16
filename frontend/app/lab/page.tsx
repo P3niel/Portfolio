@@ -214,7 +214,7 @@ export default function LabPage() {
               </p>
               <h1 className="text-3xl font-bold text-ink">Runtime Lab</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-2">
-                Demo controlled surface with live-ready API, metrics, model registry, log stream, and inference contracts.
+                Controlled demonstration of API, metrics, model registry, event stream, and inference contracts.
               </p>
             </div>
             <div className="flex flex-col items-end gap-2">
@@ -225,6 +225,15 @@ export default function LabPage() {
             </div>
           </div>
         </header>
+
+        {mode === "demo" && (
+          <div className="mb-6 border border-yellow-400/40 bg-yellow-400/10 p-4">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-yellow-300">Demo mode · backend intentionally offline</p>
+            <p className="mt-2 text-xs leading-6 text-ink-2">
+              k3s, MLflow, Prometheus, Grafana and Loki are intentionally stopped to control infrastructure costs. The panels below use explicit sample payloads and do not represent live production metrics.
+            </p>
+          </div>
+        )}
 
         <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Mode" value={modeLabel} sub={`checked ${formatTime(lastChecked) ?? "pending"}`} />
@@ -322,9 +331,9 @@ export default function LabPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-ink-3">
-          Auto-refresh 15s <span className="text-accent">·</span>{" "}
-          <Link href="/projects/mlops-platform" className="underline underline-offset-4 transition-colors hover:text-accent">
-            inspect case study
+          Demo refresh 15s <span className="text-accent">·</span>{" "}
+          <Link href="/projects/portfolio" className="underline underline-offset-4 transition-colors hover:text-accent">
+            inspect portfolio case study
           </Link>
         </p>
       </div>

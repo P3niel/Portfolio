@@ -29,7 +29,7 @@ export default function CvExperience({ experiences }: { experiences: Experience[
                 href={`/projects/${exp.projectSlug}`}
                 className="inline-flex items-center gap-1 text-xs text-accent hover:underline underline-offset-4"
               >
-                → Voir le projet associé
+                → Voir l’étude de cas associée
               </Link>
             )}
           </div>

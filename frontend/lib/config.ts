@@ -38,6 +38,12 @@ export interface Education {
   year: string;
 }
 
+export interface AcademicJourneyStep {
+  period: string;
+  title: string;
+  description: string;
+}
+
 export interface LabConfig {
   apiUrl: string;
   mlflowUrl: string;
@@ -49,81 +55,373 @@ export interface LabConfig {
 
 export const cv = {
   name: "Peniel Teko-Agbo",
-  title: "DevOps / MLOps Engineer",
-  tagline: "Building reproducible, observable, automated ML systems.",
+  title: "Étudiant en informatique — Backend, DevOps & IA",
+  tagline: "Je conçois des applications Python, des API et des systèmes IA observables.",
+  profile: [
+    "Étudiant en informatique spécialisé dans le développement backend et les architectures logicielles.",
+    "Je conçois des applications Python et des API, mets en place des environnements Docker, automatise des workflows et développe des outils autour de l'intelligence artificielle, de l'observabilité et du DevOps.",
+    "Mon principal projet est AI-Obs, une plateforme d'observabilité destinée aux systèmes IA, conçue autour d'une architecture événementielle et d'une gouvernance orientée qualité logicielle.",
+    "Cofondateur de Lambda-section et lead sur NeuralDBG, j'ai piloté le volet DevOps/MLOps : reproductibilité avec Docker et scripting, gouvernance des branches selon les rôles et assainissement Git du dépôt.",
+    "Je recherche une alternance afin de participer au développement de produits techniques exigeants et d'évoluer vers des fonctions d'ingénieur logiciel, DevOps ou IA.",
+  ],
   contact: {
-    email: "mamsbruce@gmail.com",
+    email: "penielteko02@gmail.com",
     github: "https://github.com/P3niel",
-    linkedin: "https://linkedin.com/in/peniel-mams",
-    location: "Paris, France",
+    linkedin: "https://www.linkedin.com/in/péniel-teko-agbo-b6a759237",
+    location: "France",
   },
   experiences: [
     {
-      id: "exp-mlops-2024",
-      role: "MLOps Engineer",
-      company: "Projet Personnel",
-      period: "2024 — présent",
+      id: "exp-ai-obs",
+      role: "Fondateur · Concepteur et développeur backend",
+      company: "AI-Obs — Projet personnel",
+      period: "En cours",
       description: [
-        "Conception et déploiement d'une plateforme MLOps complète sur VPS (k3s)",
-        "Pipeline CI/CD automatisé avec GitHub Actions : lint, tests, build Docker, déploiement Kubernetes",
-        "Monitoring Prometheus + Grafana avec dashboards latence, error rate et version modèle",
-        "Automatisation de la promotion de modèles MLflow basée sur les métriques de performance",
+        "Conception d'un prototype d'observabilité pour rendre les exécutions d'agents IA inspectables, comparables et reproductibles.",
+        "Développement en Python d'un Kernel déterministe, du replay, de la comparaison de runs et de la détection d'anomalies.",
+        "Définition de contrats versionnés, schémas JSON, décisions d'architecture et règles de traçabilité.",
+        "Mise en place d'un workflow de livraison piloté par tickets avec lint, typage, tests, sécurité et validation CI.",
       ],
-      projectSlug: "mlops-platform",
+      projectSlug: "ai-obs",
     },
     {
-      id: "exp-devops-2023",
-      role: "Ingénieur DevOps",
-      company: "Expérience professionnelle",
-      period: "2023 — 2024",
+      id: "exp-lambda-section",
+      role: "Cofondateur · Lead DevOps/MLOps",
+      company: "Lambda-section — NeuralDBG",
+      period: "Collaboration open source",
       description: [
-        "Infrastructure as Code avec Terraform et Kubernetes",
-        "Mise en place de pipelines CI/CD robustes",
-        "Observabilité et monitoring des systèmes en production",
+        "Lead sur le volet DevOps/MLOps de NeuralDBG, projet open source porté par Lambda-section.",
+        "Initiative et mise en place de la reproductibilité des environnements avec Docker et des scripts d'automatisation.",
+        "Mise en place et amélioration de la CI/CD avec GitHub Actions pour automatiser les contrôles et validations.",
+        "Organisation des accès aux branches en fonction des rôles et responsabilités des contributeurs.",
+        "Assainissement Git du dépôt, amélioration de la traçabilité et stabilisation des workflows de contribution.",
+      ],
+      projectSlug: "neuraldbg",
+    },
+    {
+      id: "exp-eurial",
+      role: "Technicien Service Desk",
+      company: "Eurial — Nantes · Alternance",
+      period: "Alternance",
+      description: [
+        "Assistance et support aux utilisateurs ; diagnostic et résolution d'incidents matériels, logiciels et réseau.",
+        "Administration des comptes utilisateurs sous Active Directory et Microsoft 365.",
+        "Gestion des postes de travail, des équipements informatiques et des environnements Windows.",
+        "Participation à l'amélioration des procédures de support et de la documentation.",
+      ],
+    },
+    {
+      id: "exp-mairie-2024",
+      role: "Stagiaire Informatique",
+      company: "Mairie de Saint-Lambert-la-Potherie",
+      period: "Avril 2024 — Mai 2024",
+      description: [
+        "Développement d'un outil Python automatisant la génération de documents Word à partir de fichiers Excel.",
+        "Utilisation de xlwings et docxtpl pour automatiser les processus administratifs.",
+        "Participation à des travaux de segmentation réseau.",
+        "Contribution à la préparation d'un espace collaboratif SharePoint.",
       ],
     },
   ] satisfies Experience[],
 
   skills: [
     {
-      category: "Infrastructure",
-      items: ["Kubernetes (k3s)", "Docker", "Terraform", "Linux", "Traefik"],
-    },
-    {
-      category: "MLOps",
-      items: ["MLflow", "FastAPI", "scikit-learn", "Prometheus", "Grafana"],
-    },
-    {
-      category: "CI/CD",
-      items: ["GitHub Actions", "Docker Registry (GHCR)", "Kustomize"],
-    },
-    {
       category: "Langages",
-      items: ["Python", "TypeScript", "Bash", "YAML"],
+      items: ["Python", "Java", "C", "C++", "PHP", "JavaScript", "SQL", "HTML5 / CSS3"],
     },
     {
-      category: "Frontend",
-      items: ["Next.js 15", "React 19", "Tailwind CSS"],
+      category: "Backend",
+      items: ["FastAPI", "Flask", "Laravel", "API REST", "Architecture logicielle", "POO", "SMTP", "Génération de rapports HTML"],
+    },
+    {
+      category: "IA",
+      items: ["Intégration de LLM", "Instrumentation IA", "Observabilité IA", "NLP", "Prompt Engineering"],
+    },
+    {
+      category: "DevOps & Cloud",
+      items: ["Docker", "Docker Compose", "Git", "GitHub Actions", "CI/CD", "Terraform", "Infrastructure as Code", "AWS", "Ansible", "Linux", "Nginx"],
+    },
+    {
+      category: "Bases de données",
+      items: ["PostgreSQL", "MySQL", "SQL Server"],
+    },
+    {
+      category: "Systèmes",
+      items: ["Active Directory", "Microsoft Entra ID", "Microsoft Intune", "Microsoft 365", "Windows Server", "PowerShell", "GPO"],
+    },
+    {
+      category: "Outils",
+      items: ["psutil", "Postman", "Vite", "Composer", "VS Code", "GitHub"],
+    },
+    {
+      category: "Observabilité",
+      items: ["Monitoring CPU / RAM / stockage", "Détection d'anomalies", "Alertes automatisées", "Rapports système", "Grafana"],
+    },
+    {
+      category: "Méthodes",
+      items: ["Git Flow", "Architecture événementielle", "Conception orientée API", "Documentation technique", "Tests logiciels", "Revue de code", "Agile / Scrum"],
     },
   ] satisfies Skill[],
 
   education: [
     {
-      degree: "Master — Data Science / IA",
-      institution: "Université (placeholder)",
-      year: "2023",
+      degree: "Programme Grande École",
+      institution: "Epitech Technology — Paris",
+      year: "2022 — 2023",
     },
     {
-      degree: "Licence — Informatique",
-      institution: "Université (placeholder)",
-      year: "2021",
+      degree: "Bachelor Informatique — première année validée, deuxième année suivie",
+      institution: "Learn IT Open Campus — Angers",
+      year: "À partir de 2023",
     },
   ] satisfies Education[],
+
+  academicJourney: [
+    {
+      period: "Septembre 2022",
+      title: "Arrivée en France",
+      description: "Arrivée en France comme étudiant international avec l'objectif de construire un parcours en ingénierie informatique.",
+    },
+    {
+      period: "2022 — 2023",
+      title: "Epitech Technology — Paris",
+      description: "Intégration du Programme Grande École et découverte d'un apprentissage du développement logiciel structuré autour de projets.",
+    },
+    {
+      period: "À partir de 2023",
+      title: "Learn IT Open Campus — Angers",
+      description: "Première année du Bachelor Informatique validée, puis deuxième année consacrée au développement logiciel, à l'administration systèmes et à l'ingénierie informatique.",
+    },
+    {
+      period: "Après la deuxième année",
+      title: "Interruption administrative",
+      description: "La troisième année n'a pas pu être poursuivie en raison d'une procédure administrative liée au droit au séjour, malgré la validation du parcours académique jusque-là.",
+    },
+    {
+      period: "Depuis cette interruption",
+      title: "Apprentissage autonome et projets d'ingénierie",
+      description: "Approfondissement intensif de l'architecture logicielle, du DevOps, de l'observabilité des systèmes IA et du cloud à travers plusieurs projets personnels, dont AI-Obs comme projet principal.",
+    },
+  ] satisfies AcademicJourneyStep[],
 };
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
 export const projects: Project[] = [
+  {
+    slug: "ai-obs",
+    name: "AI-Obs",
+    shortDescription: "Prototype Python gouverné pour inspecter, comparer et rejouer les exécutions d’agents IA.",
+    description: "Prototype d'observabilité pour agents IA fondé sur un Kernel déterministe, des analyses d'exécution, des contrats techniques versionnés et une gouvernance orientée qualité logicielle.",
+    tags: ["Python", "Pytest", "JSON Schema", "GitHub Actions", "Observabilité", "Architecture événementielle", "Gouvernance"],
+    githubUrl: "https://github.com/P3niel/ai-observability",
+    featured: true,
+    domain: "Observabilité des systèmes IA",
+    role: "Conception, architecture et développement backend",
+    timeframe: "Projet personnel · En cours",
+    problem: "Rendre les exécutions d'agents IA inspectables, comparables et reproductibles, tout en conservant des contrats et des critères de qualité vérifiables.",
+    architecture: `Kernel en mémoire -> vérité d'exécution
+Payloads sérialisés -> analyses et détection
+Replay et comparaison -> investigation
+Dashboard statique -> surface de revue`,
+    decisions: [
+      "Conserver les événements immuables comme source de vérité pour la reconstruction des traces.",
+      "Séparer le Kernel, les projections d'observabilité et les futures couches HTTP et de persistance.",
+      "Appuyer chaque évolution sur des contrats versionnés, la revue de code et des règles de gouvernance.",
+    ],
+    outcomes: [
+      "Kernel, replay, comparaison de runs et détection d'anomalies implémentés en Python.",
+      "Dashboard statique et alertes Slack ou Discord disponibles comme surfaces de revue.",
+      "Contrats, décisions d'architecture et validations reliés au cycle de développement.",
+    ],
+  },
+  {
+    slug: "neuraldbg",
+    name: "NeuralDBG",
+    shortDescription: "Lead DevOps/MLOps sur un outil open source de diagnostic causal pour entraînements PyTorch.",
+    description: "NeuralDBG est un projet open source porté par Lambda-section qui s'intègre aux boucles d'entraînement PyTorch pour détecter des anomalies — gradients instables, activations saturées, pertes divergentes ou données invalides — et produire des hypothèses causales. Cofondateur de Lambda-section et lead sur NeuralDBG, j'ai pris en charge le volet DevOps/MLOps afin de rendre le développement reproductible, traçable et mieux gouverné.",
+    tags: ["DevOps", "MLOps", "CI/CD", "GitHub Actions", "Docker", "Scripting", "Git", "PyTorch", "Reproductibilité", "Traçabilité"],
+    githubUrl: "https://github.com/LambdaSection/NeuralDBG",
+    featured: true,
+    domain: "Collaboration open source · Lambda-section",
+    role: "Co-founder · Lead DevOps/MLOps",
+    timeframe: "Contribution collaborative",
+    impact: [
+      { label: "Rôle", value: "Lead DevOps / MLOps" },
+      { label: "Priorité", value: "Reproductibilité" },
+      { label: "Organisation", value: "Lambda-section" },
+    ],
+    problem: "Un outil de diagnostic PyTorch validé sur de nombreuses architectures mobilise des dépendances, des benchmarks, des exemples et plusieurs chemins d'exécution. J'ai pris l'initiative de structurer son environnement de développement afin de limiter les écarts entre machines, rendre les validations rejouables, contrôler les accès aux branches selon les rôles et maintenir un historique Git propre.",
+    architecture: `Code NeuralDBG et dépendances
+        ↓
+Docker et scripts d'automatisation
+        ↓
+Installation et validations reproductibles
+        ↓
+CI/CD avec GitHub Actions
+        ↓
+Accès aux branches selon les rôles
+        ↓
+Dépôt Git assaini et changements traçables`,
+    decisions: [
+      "Prendre le lead du volet DevOps/MLOps et formaliser les besoins de reproductibilité du projet.",
+      "Conteneuriser l'environnement avec Docker et automatiser les opérations répétitives avec des scripts.",
+      "Mettre en place une CI/CD avec GitHub Actions pour exécuter automatiquement les contrôles et validations du projet.",
+      "Organiser les accès aux branches en fonction des rôles pour mieux encadrer les contributions.",
+      "Assainir le dépôt au niveau Git et renforcer la traçabilité des changements et validations.",
+    ],
+    outcomes: [
+      "Environnement Docker et scripts facilitant une installation cohérente entre contributeurs.",
+      "Tests, benchmarks et validations plus faciles à reproduire.",
+      "Contrôles automatisés dans la CI/CD avant intégration des changements.",
+      "Accès aux branches structurés selon les responsabilités de l'équipe.",
+      "Historique Git assaini et changements techniques plus simples à auditer.",
+    ],
+  },
+  {
+    slug: "devops-lab",
+    name: "DevOpsLab",
+    shortDescription: "Environnements de préproduction reproductibles avec Docker et Terraform.",
+    description: "Laboratoire personnel consacré au déploiement de services Linux, à l'automatisation d'infrastructure et à l'expérimentation de pipelines CI/CD.",
+    tags: ["Docker", "Terraform", "Linux", "CI/CD", "DevOps"],
+    featured: true,
+    domain: "Infrastructure et automatisation",
+    role: "Conception et mise en œuvre",
+    timeframe: "Projet personnel",
+    outcomes: [
+      "Mise en place d'environnements de préproduction.",
+      "Automatisation de l'infrastructure et du déploiement de services Linux.",
+      "Expérimentation de pratiques CI/CD reproductibles.",
+    ],
+  },
+  {
+    slug: "portfolio",
+    name: "Portfolio",
+    shortDescription: "Frontend public documentant mes projets, mon parcours et ma manière de construire des systèmes.",
+    description: "Ce portfolio est un produit Next.js conçu comme une preuve d'ingénierie : navigation responsive, terminal interactif, CV structuré, études de cas pilotées par configuration, Lab en mode démonstration contrôlée, routes proxy prêtes pour un backend et publication continue avec GitHub Actions et Vercel.",
+    tags: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS", "GitHub Actions", "Vercel"],
+    githubUrl: "https://github.com/P3niel/Portfolio",
+    liveUrl: "/",
+    featured: true,
+    domain: "Frontend, plateforme et expérience développeur",
+    role: "Conception et développement full-stack",
+    timeframe: "Projet personnel · Frontend public",
+    impact: [
+      { label: "Surface", value: "Vercel public" },
+      { label: "Contenu", value: "Config-driven" },
+      { label: "Runtime", value: "Demo contrôlée" },
+    ],
+    problem: "Présenter des compétences backend, DevOps et IA sans se limiter à une liste de technologies, tout en distinguant clairement les fonctionnalités réellement actives des infrastructures volontairement arrêtées.",
+    architecture: `Visiteur -> Next.js App Router
+        ├──> accueil et terminal interactif
+        ├──> CV et parcours
+        ├──> études de cas pilotées par config
+        └──> Lab et routes proxy
+
+GitHub Actions -> lint, types et tests
+Vercel -> preview par PR et frontend public
+k3s / MLflow -> IaC conservée, runtime éteint`,
+    decisions: [
+      "Centraliser le CV et les études de cas dans une configuration typée pour éviter la dérive de contenu.",
+      "Conserver une navigation classique en complément du terminal interactif.",
+      "Présenter le Lab en démonstration contrôlée lorsque le backend est volontairement hors ligne.",
+      "Conserver les workflows et manifests backend comme preuves reproductibles sans maintenir l'infrastructure coûteuse en permanence.",
+    ],
+    outcomes: [
+      "Accueil responsive avec terminal, sélection éditoriale de projets et contact direct.",
+      "CV, parcours académique et études de cas accessibles par des routes dédiées.",
+      "Lab capable de basculer entre données de démonstration et services live par configuration.",
+      "Contrôles GitHub Actions et previews Vercel sur les pull requests.",
+    ],
+  },
+  {
+    slug: "toxic-ai",
+    name: "ToxicAI",
+    shortDescription: "Analyse des comportements et de la fiabilité des modèles d'IA.",
+    description: "Étude et développement d'outils d'analyse des comportements de modèles d'intelligence artificielle, avec un intérêt particulier pour la détection d'anomalies et l'évaluation de leur fiabilité.",
+    tags: ["Intelligence artificielle", "NLP", "Détection d'anomalies", "Fiabilité"],
+    featured: false,
+    domain: "Évaluation des systèmes IA",
+    role: "Étude et développement",
+    timeframe: "Projet personnel",
+    outcomes: [
+      "Expérimentations autour de la détection d'anomalies.",
+      "Exploration de critères d'évaluation de la fiabilité des systèmes IA.",
+    ],
+  },
+  {
+    slug: "infra-terraform-preprod",
+    name: "Infra Terraform Preprod",
+    shortDescription: "Environnement de préproduction AWS reproductible avec Terraform.",
+    description: "Infrastructure de préproduction conçue avec Terraform pour automatiser le provisionnement d'un environnement AWS reproductible. L'environnement cloud a été volontairement désactivé après la phase d'expérimentation afin de maîtriser les coûts, tandis que le code conserve la conception et permet de recréer l'infrastructure de manière contrôlée.",
+    tags: ["Terraform", "AWS", "Infrastructure as Code", "Linux", "Git", "CI/CD"],
+    featured: false,
+    domain: "Cloud et Infrastructure as Code",
+    role: "Conception et automatisation de l'infrastructure",
+    timeframe: "Projet personnel · Infrastructure désactivée",
+    problem: "Disposer d'un environnement de préproduction proche des conditions cloud réelles, sans dépendre d'une configuration manuelle ni conserver des ressources AWS coûteuses en permanence.",
+    architecture: `Code Terraform -> plan de déploiement
+AWS -> environnement de préproduction
+Validation de l'infrastructure
+Arrêt des ressources -> maîtrise des coûts`,
+    decisions: [
+      "Décrire l'environnement sous forme de code afin de pouvoir le reproduire et le faire évoluer.",
+      "Séparer la conception de l'infrastructure de son état d'exécution dans le cloud.",
+      "Désactiver l'environnement après validation pour éviter des coûts AWS permanents.",
+    ],
+    outcomes: [
+      "Mise en pratique du provisionnement cloud avec Terraform.",
+      "Environnement recréable à partir du code plutôt que d'une configuration manuelle.",
+      "Prise en compte du coût comme contrainte d'exploitation de l'infrastructure.",
+    ],
+  },
+  {
+    slug: "sentinelops",
+    name: "SentinelOps",
+    shortDescription: "Monitoring local autonome avec détection d'anomalies, alertes SMTP et rapports HTML.",
+    description: "SentinelOps est une application de surveillance système locale conçue pour rester simple à déployer et autonome. Elle collecte les signaux CPU, mémoire et stockage, expose leur état via une API Flask et une interface web, détecte les anomalies, conserve un historique d'événements, génère des rapports HTML et peut envoyer des alertes par e-mail. Le projet est exécutable localement, mais aucune instance publique n'est actuellement maintenue afin de réduire les coûts d'hébergement.",
+    tags: ["Python 3.12", "Flask", "psutil", "SMTP", "Docker Compose", "GitHub Actions", "Tailwind CSS"],
+    githubUrl: "https://github.com/P3niel/sentinelops",
+    featured: false,
+    domain: "Monitoring système et automatisation",
+    role: "Conception et développement full-stack",
+    timeframe: "Projet personnel · Déploiement public désactivé",
+    impact: [
+      { label: "Signaux", value: "CPU · RAM · Stockage" },
+      { label: "Exposition", value: "API + Interface web" },
+      { label: "Statut", value: "Local · Non hébergé" },
+    ],
+    problem: "Surveiller une machine locale sans déployer une plateforme d'observabilité lourde : identifier rapidement une saturation CPU, mémoire ou stockage, notifier l'administrateur et conserver une trace exploitable pour le diagnostic ou l'audit.",
+    architecture: `psutil -> collecte CPU, RAM et stockage
+        ↓
+Flask -> API de statut et interface web
+        ↓
+Moteur de détection -> anomalies et événements
+        ├──> SMTP -> notification e-mail
+        └──> HTML -> rapport exploitable
+
+Docker Compose -> environnement local reproductible
+GitHub Actions -> contrôles automatisés`,
+    decisions: [
+      "Utiliser psutil pour collecter localement les signaux système sans dépendre d'un agent externe.",
+      "Séparer l'observation, la détection, la réponse et la génération de rapports derrière des routes Flask dédiées.",
+      "Utiliser SMTP avec une configuration par variables d'environnement afin de garder les secrets hors du code.",
+      "Conteneuriser l'application avec Docker Compose et fournir un lancement reproductible via Make.",
+      "Automatiser les contrôles du projet avec GitHub Actions.",
+    ],
+    outcomes: [
+      "API couvrant le statut système, la détection, la réponse, l'historique des événements et la génération de rapports.",
+      "Interface web dédiée à la consultation de l'état local et au déclenchement d'une alerte de test.",
+      "Notifications SMTP configurables lors de la détection d'un seuil critique.",
+      "Rapports HTML utilisables comme historique de diagnostic et preuve d'incident.",
+      "Environnement local reproductible avec Docker Compose et pipeline GitHub Actions.",
+      "Déploiement public volontairement désactivé pour éviter des coûts d'infrastructure permanents.",
+    ],
+  },
+];
+
+// Archived concept studies kept out of the rendered portfolio.
+export const archivedProjectDrafts: Project[] = [
   {
     slug: "mlops-platform",
     name: "MLOps Platform",

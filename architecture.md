@@ -75,3 +75,13 @@ Next API routes
        ▼
 External systems
 FastAPI · Prometheus · Grafana · MLflow · GitHub
+
+Current public runtime mode:
+
+- Vercel serves the Next.js frontend.
+- `PORTFOLIO_RUNTIME_MODE=demo` is the default and prevents proxy routes from
+  contacting backend services.
+- k3s, MLflow, Prometheus, Grafana, and Loki are intentionally offline to
+  control infrastructure costs.
+- Dockerfiles, Kubernetes manifests, and the archived CD workflow remain
+  versioned as reproducible Infrastructure as Code.

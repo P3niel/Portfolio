@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DEMO_RUNTIME_REASON, isDemoRuntime } from "@/lib/runtime-mode";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const TIMEOUT_MS = 2500;
@@ -17,7 +18,7 @@ function demoMetrics(error?: string) {
     errorRate: 0.002,
     modelVersion: "local-iris-1.0.0",
     source: "demo",
-    upstream: `${API_URL}/metrics`,
+    upstream: null,
     checked_at: new Date().toISOString(),
     error,
   };
@@ -93,6 +94,8 @@ function parsePrometheusText(text: string): ParsedMetrics {
 }
 
 export async function GET() {
+  if (isDemoRuntime()) return NextResponse.json(demoMetrics(DEMO_RUNTIME_REASON));
+
   try {
     const res = await fetchWithTimeout(`${API_URL}/metrics`, {
       cache: "no-store",

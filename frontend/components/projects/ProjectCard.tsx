@@ -9,7 +9,7 @@ export default function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={href}
-      className="group block border border-rule bg-surface/40 p-5 transition-colors hover:border-accent/40 hover:bg-accent-soft"
+      className="group flex h-full min-w-0 flex-col border border-rule bg-surface/40 p-5 transition-colors hover:border-accent/40 hover:bg-accent-soft"
     >
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
@@ -53,9 +53,9 @@ export default function ProjectCard({ project }: { project: Project }) {
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-rule pt-4 font-mono text-xs">
-        <span className="text-ink-3">{project.role ?? "technical case study"}</span>
-        <span className="text-accent transition-transform group-hover:translate-x-1">open -&gt;</span>
+      <div className="mt-auto grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-3 border-t border-rule pt-4 font-mono text-xs">
+        <span className="min-w-0 break-words leading-5 text-ink-3">{project.role ?? "technical case study"}</span>
+        <span className="shrink-0 text-accent transition-transform group-hover:translate-x-1">open -&gt;</span>
       </div>
     </Link>
   );

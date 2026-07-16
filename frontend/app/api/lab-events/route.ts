@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DEMO_RUNTIME_REASON, isDemoRuntime } from "@/lib/runtime-mode";
 
 interface LabEvent {
   time: string;
@@ -19,7 +20,7 @@ function fallbackEvents(error?: string) {
       { time: new Date(now - 180000).toISOString(), level: "warn", message: "Live Loki stream not configured" },
     ] satisfies LabEvent[],
     source: "demo",
-    upstream: process.env.LOKI_URL ?? null,
+    upstream: null,
     checked_at: new Date().toISOString(),
     error,
   };
@@ -40,6 +41,8 @@ async function fetchWithTimeout(url: string) {
 }
 
 export async function GET() {
+  if (isDemoRuntime()) return NextResponse.json(fallbackEvents(DEMO_RUNTIME_REASON));
+
   const LOKI_URL = process.env.LOKI_URL;
 
   if (LOKI_URL) {

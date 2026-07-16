@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { DEMO_RUNTIME_REASON, isDemoRuntime } from "@/lib/runtime-mode";
 
 const MLFLOW_URI = process.env.MLFLOW_TRACKING_URI ?? "http://localhost:5000";
 const MODEL_NAME = "portfolio-model";
@@ -11,7 +12,7 @@ function demoMlflow(error?: string) {
     stage: "Demo",
     last_updated: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
     source: "demo",
-    upstream: MLFLOW_URI,
+    upstream: null,
     checked_at: new Date().toISOString(),
     error,
   };
@@ -32,6 +33,8 @@ async function fetchWithTimeout(url: string) {
 }
 
 export async function GET() {
+  if (isDemoRuntime()) return NextResponse.json(demoMlflow(DEMO_RUNTIME_REASON));
+
   try {
     const [modelRes, versionRes] = await Promise.all([
       fetchWithTimeout(`${MLFLOW_URI}/api/2.0/mlflow/registered-models/get?name=${MODEL_NAME}`),

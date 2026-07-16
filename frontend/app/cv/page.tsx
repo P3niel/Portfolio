@@ -1,9 +1,11 @@
 import { cv } from "@/lib/config";
 import Nav from "@/components/Nav";
 import CvHeader from "@/components/cv/CvHeader";
+import CvProfile from "@/components/cv/CvProfile";
 import CvExperience from "@/components/cv/CvExperience";
 import CvSkills from "@/components/cv/CvSkills";
 import CvEducation from "@/components/cv/CvEducation";
+import CvAcademicJourney from "@/components/cv/CvAcademicJourney";
 
 export const metadata = {
   title: `CV — ${cv.name}`,
@@ -16,9 +18,11 @@ export default function CvPage() {
       <Nav />
       <div className="max-w-2xl mx-auto">
         <CvHeader />
+        <CvProfile paragraphs={cv.profile} />
         <CvExperience experiences={cv.experiences} />
         <CvSkills skills={cv.skills} />
-        <CvEducation education={cv.education} />
+        {cv.education.length > 0 && <CvEducation education={cv.education} />}
+        <CvAcademicJourney steps={cv.academicJourney} />
 
         {/* Contact block */}
         <section>
