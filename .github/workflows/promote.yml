@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
 
 # Manual only while MLflow and k3s are intentionally offline to control costs.
+# Reactivation candidate, intentionally disabled:
+# schedule:
+#   - cron: "0 6 * * *"
 
 concurrency:
   group: model-promotion

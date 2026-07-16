@@ -4,6 +4,10 @@
 not build or deploy the Portfolio backend while the k3s infrastructure is
 offline to control costs.
 
+The main CI remains active for pull requests and `main`. Feature-branch pushes
+do not run a second duplicate CI when a pull request already provides the same
+validation.
+
 The Dockerfiles, Kubernetes manifests, and deployment steps remain versioned
 as Infrastructure as Code evidence.
 
