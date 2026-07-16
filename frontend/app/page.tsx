@@ -55,19 +55,26 @@ export default function HomePage() {
     const stage = heroStageRef.current;
     if (!hero || !stage) return;
     let raf = 0;
+    let heroStart = 0;
+    let heroScrollable = 1;
+    let viewportHeight = window.innerHeight;
+
+    function measureHero() {
+      heroStart = hero!.offsetTop;
+      viewportHeight = window.innerHeight;
+      heroScrollable = Math.max(1, hero!.offsetHeight - viewportHeight);
+    }
 
     function updateHero() {
       raf = 0;
-      const start = hero!.offsetTop;
-      const scrollable = Math.max(1, hero!.offsetHeight - window.innerHeight);
-      const scrolled = window.scrollY - start;
-      const p = clamp01(scrolled / scrollable);
+      const scrolled = window.scrollY - heroStart;
+      const p = clamp01(scrolled / heroScrollable);
       const shadow = clamp01((p - 0.75) / 0.25);
       const surface = 1 - Math.pow(1 - p, 1.12);
       const surfaceOpacity = clamp01(1 - surface * 0.92);
-      const nameLinger = window.innerHeight * 0.5;
-      const nameFadeDistance = window.innerHeight * 0.45;
-      const nameExit = clamp01((scrolled - scrollable - nameLinger) / nameFadeDistance);
+      const nameLinger = viewportHeight * 0.5;
+      const nameFadeDistance = viewportHeight * 0.45;
+      const nameExit = clamp01((scrolled - heroScrollable - nameLinger) / nameFadeDistance);
       const nameProgress = Math.pow(p, 0.85);
       const megaNameProgress = Math.pow(p, 0.9);
       const nameFontSize = 11.5 + nameProgress * 2.6;
@@ -91,12 +98,18 @@ export default function HomePage() {
       raf = window.requestAnimationFrame(updateHero);
     }
 
+    function handleHeroResize() {
+      measureHero();
+      scheduleHeroUpdate();
+    }
+
     window.addEventListener("scroll", scheduleHeroUpdate, { passive: true });
-    window.addEventListener("resize", scheduleHeroUpdate);
+    window.addEventListener("resize", handleHeroResize);
+    measureHero();
     scheduleHeroUpdate();
     return () => {
       window.removeEventListener("scroll", scheduleHeroUpdate);
-      window.removeEventListener("resize", scheduleHeroUpdate);
+      window.removeEventListener("resize", handleHeroResize);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
@@ -108,30 +121,44 @@ export default function HomePage() {
     const navbar = document.getElementById("navbar");
     const mfs = mfsRef.current;
     let raf = 0;
+    let viewportHeight = window.innerHeight;
+    let documentHeight = document.documentElement.scrollHeight;
+    let navBottom = 64;
+    let sectionGeometry: Array<{ element: HTMLElement; top: number; height: number }> = [];
+
+    function measureScrollLayout() {
+      viewportHeight = window.innerHeight;
+      documentHeight = document.documentElement.scrollHeight;
+      navBottom = navbar?.getBoundingClientRect().bottom ?? 64;
+      sectionGeometry = sections.map((element) => ({
+        element,
+        top: element.offsetTop,
+        height: element.offsetHeight,
+      }));
+      document.documentElement.style.setProperty("--scroll-shadow-edge", `${Math.round(navBottom)}px`);
+    }
 
     function updateScrollState() {
       raf = 0;
       const sy = window.scrollY;
-      const navBottom = navbar?.getBoundingClientRect().bottom ?? 64;
-      document.documentElement.style.setProperty("--scroll-shadow-edge", `${Math.round(navBottom)}px`);
 
       // active link
       let cur = "";
-      const probe = sy + window.innerHeight * 0.35;
-      sections.forEach((s) => { if (probe >= s.offsetTop) cur = s.id; });
-      const nearBottom = sy + window.innerHeight >= document.documentElement.scrollHeight - 80;
+      const probe = sy + viewportHeight * 0.35;
+      sectionGeometry.forEach(({ element, top }) => { if (probe >= top) cur = element.id; });
+      const nearBottom = sy + viewportHeight >= documentHeight - 80;
       if (nearBottom && sections.length) cur = sections[sections.length - 1].id;
       navLinks.forEach((l) => { l.classList.toggle("active", l.getAttribute("href") === "#" + cur); });
 
       // per-section shadow
-      sections.forEach((s) => {
-        const rect = s.getBoundingClientRect();
-        const progress = 1 - rect.bottom / (s.offsetHeight + window.innerHeight);
+      sectionGeometry.forEach(({ element, top, height }) => {
+        const bottom = top + height - sy;
+        const progress = 1 - bottom / (height + viewportHeight);
         const active = progress > 0.45;
-        s.classList.toggle("shadow-active", active);
+        element.classList.toggle("shadow-active", active);
         if (active) {
           const depth = Math.min(1, (progress - 0.45) / 0.3);
-          s.style.setProperty("--shadow-depth", String(depth));
+          element.style.setProperty("--shadow-depth", String(depth));
         }
       });
 
@@ -143,12 +170,19 @@ export default function HomePage() {
       raf = window.requestAnimationFrame(updateScrollState);
     }
 
+
+    function handleScrollLayoutResize() {
+      measureScrollLayout();
+      scheduleScrollStateUpdate();
+    }
+
     window.addEventListener("scroll", scheduleScrollStateUpdate, { passive: true });
-    window.addEventListener("resize", scheduleScrollStateUpdate);
+    window.addEventListener("resize", handleScrollLayoutResize);
+    measureScrollLayout();
     scheduleScrollStateUpdate();
     return () => {
       window.removeEventListener("scroll", scheduleScrollStateUpdate);
-      window.removeEventListener("resize", scheduleScrollStateUpdate);
+      window.removeEventListener("resize", handleScrollLayoutResize);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
@@ -623,6 +657,7 @@ export default function HomePage() {
             {projects.filter((project) => project.featured).map((project) => (
               <Link className="proj-cell" href={`/projects/${project.slug}`} key={project.slug}>
                 <div className="proj-thumb">
+                  {project.flagship && <span className="proj-flagship">PROJET PHARE</span>}
                   <div className="thumb-overlay"></div>
                   <div className="thumb-content">
                     <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>

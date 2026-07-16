@@ -17,6 +17,7 @@ export interface Project {
   githubUrl?: string;
   liveUrl?: string;
   featured?: boolean;
+  flagship?: boolean;
   domain?: string;
   role?: string;
   timeframe?: string;
@@ -216,6 +217,7 @@ export const projects: Project[] = [
     tags: ["Python", "Pytest", "JSON Schema", "GitHub Actions", "Observabilité", "Architecture événementielle", "Gouvernance"],
     githubUrl: "https://github.com/P3niel/ai-observability",
     featured: true,
+    flagship: true,
     domain: "Observabilité des systèmes IA",
     role: "Conception, architecture et développement backend",
     timeframe: "Projet personnel · En cours",
