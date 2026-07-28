@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Péniel Teko-Agbo — Backend, DevOps & IA",
-  description: "Portfolio de Péniel Teko-Agbo : développement backend, DevOps et observabilité des systèmes IA avec AI-Obs.",
+  title: "Peniel Teko-Agbo — Backend, DevOps & AI",
+  description: "Peniel Teko-Agbo's portfolio: backend development, DevOps, and AI systems observability with AI-Obs.",
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
+    <html lang="en">
       <body>
         {children}
       </body>

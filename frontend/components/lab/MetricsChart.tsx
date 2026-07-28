@@ -23,7 +23,7 @@ export default function MetricsChart({ data, bare = false }: MetricsChartProps) 
   if (data.length === 0) {
     return (
       <div className={`${bare ? "" : "border border-rule rounded bg-surface"} h-32 flex items-center justify-center text-ink-3 text-xs`}>
-        En attente de données…
+        Waiting for data…
       </div>
     );
   }

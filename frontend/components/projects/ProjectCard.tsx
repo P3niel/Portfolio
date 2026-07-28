@@ -22,7 +22,7 @@ export default function ProjectCard({ project }: { project: Project }) {
         </div>
         {(project.flagship || project.featured) && (
           <span className="shrink-0 border border-accent/30 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-accent">
-            {project.flagship ? "projet phare" : "featured"}
+            {project.flagship ? "flagship" : "featured"}
           </span>
         )}
       </div>

@@ -4,7 +4,7 @@ export default function CvSkills({ skills }: { skills: Skill[] }) {
   return (
     <section className="mb-10">
       <h2 className="text-xs font-medium text-accent tracking-widest uppercase mb-6">
-        <span className="text-ink-3">#</span> Compétences
+        <span className="text-ink-3">#</span> Skills
       </h2>
       <div className="space-y-4">
         {skills.map((group) => (

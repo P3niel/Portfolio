@@ -20,7 +20,9 @@ const projectPreviews: Record<string, string> = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    typeof window === "undefined" ? "dark" : (localStorage.getItem("portfolio-theme") as "dark" | "light") || "dark"
+  );
   const heroStageRef = useRef<HTMLDivElement>(null);
   const mfsRef = useRef<HTMLDivElement>(null);
   const csCardRef = useRef<HTMLDivElement>(null);
@@ -40,11 +42,6 @@ export default function HomePage() {
 
   // ── theme ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const saved = (localStorage.getItem("portfolio-theme") || "dark") as "dark" | "light";
-    setTheme(saved);
-  }, []);
-
-  useEffect(() => {
     document.body.classList.toggle("light", theme === "light");
     localStorage.setItem("portfolio-theme", theme);
   }, [theme]);
@@ -58,11 +55,20 @@ export default function HomePage() {
     let heroStart = 0;
     let heroScrollable = 1;
     let viewportHeight = window.innerHeight;
+    let viewportWidth = window.innerWidth;
 
     function measureHero() {
       heroStart = hero!.offsetTop;
       viewportHeight = window.innerHeight;
+      viewportWidth = window.innerWidth;
       heroScrollable = Math.max(1, hero!.offsetHeight - viewportHeight);
+    }
+
+    // mirrors the .megatext-line font-size clamp(180px, 27vw + growPx, 560px) formula,
+    // so growth can be expressed as a compositor-only transform: scale() instead of
+    // an animated font-size (which forces layout on every scroll frame)
+    function megatextFontSize(growPx: number) {
+      return Math.min(560, Math.max(180, viewportWidth * 0.27 + growPx));
     }
 
     function updateHero() {
@@ -77,15 +83,15 @@ export default function HomePage() {
       const nameExit = clamp01((scrolled - heroScrollable - nameLinger) / nameFadeDistance);
       const nameProgress = Math.pow(p, 0.85);
       const megaNameProgress = Math.pow(p, 0.9);
-      const nameFontSize = 11.5 + nameProgress * 2.6;
-      const megaNameGrow = megaNameProgress * 118;
+      const nameScale = (11.5 + nameProgress * 2.6) / 14.1;
+      const megaScale = megatextFontSize(megaNameProgress * 118) / megatextFontSize(118);
       stage!.style.setProperty("--p", p.toFixed(4));
       stage!.style.setProperty("--hero-copy-y", `${(-86 * surface).toFixed(2)}px`);
       stage!.style.setProperty("--hero-card-y", `${(-72 * surface).toFixed(2)}px`);
       stage!.style.setProperty("--hero-name-y", "0px");
       stage!.style.setProperty("--hero-name-progress", nameProgress.toFixed(4));
-      stage!.style.setProperty("--hero-name-font-size", `${nameFontSize.toFixed(2)}px`);
-      stage!.style.setProperty("--hero-megatext-grow", `${megaNameGrow.toFixed(2)}px`);
+      stage!.style.setProperty("--hero-name-scale", nameScale.toFixed(4));
+      stage!.style.setProperty("--hero-megatext-scale", megaScale.toFixed(4));
       stage!.style.setProperty("--hero-copy-opacity", surfaceOpacity.toFixed(4));
       stage!.style.setProperty("--hero-card-opacity", surfaceOpacity.toFixed(4));
       stage!.style.setProperty("--hero-name-opacity", clamp01(1 - nameExit).toFixed(4));
@@ -234,9 +240,9 @@ export default function HomePage() {
         <div class="t-line t-muted">whoami:</div>
         <div class="t-line">&nbsp;&nbsp;${cv.name} — ${cv.title}</div>
         <div class="t-line t-muted">status:</div>
-        <div class="t-line">&nbsp;&nbsp;Étudiant en informatique · recherche une alternance</div>
+        <div class="t-line">&nbsp;&nbsp;Computer science student · seeking a work-study opportunity</div>
         <div class="t-line t-muted">focus:</div>
-        <div class="t-line">&nbsp;&nbsp;Backend · DevOps · IA · Observabilité</div>
+        <div class="t-line">&nbsp;&nbsp;Backend · DevOps · AI · Observability</div>
         <div class="t-line t-muted">cat /etc/contact:</div>
         <div class="t-line">&nbsp;&nbsp;email: ${cv.contact.email}</div>
         <div class="t-line">&nbsp;&nbsp;gh:    github.com/P3niel</div>
@@ -474,11 +480,18 @@ export default function HomePage() {
   // ── scroll-linked terminal collapse ──────────────────────────────────────
   useEffect(() => {
     const SCROLL_TO_MINIMIZE = 180;
+    let raf = 0;
+    let cardH = 0;
+    let latestP = 0;
+
+    function measureCard() {
+      cardH = csCardRef.current?.offsetHeight ?? 0;
+    }
 
     function applyScrollProgress(p: number) {
+      raf = 0;
       const card = csCardRef.current;
       if (!card || p <= 0 || p >= 1) return;
-      const cardH = card.offsetHeight;
       const peekH = 108;
       const maxTranslate = cardH - peekH;
       const translateY = p * maxTranslate;
@@ -492,6 +505,9 @@ export default function HomePage() {
       const screen = tScreenRef.current;
       if (screen && (e.target as HTMLElement).closest("#t-screen")) return;
 
+      // remeasure once per gesture (not per wheel tick) to avoid layout thrashing
+      if (scrollAccRef.current === 0) measureCard();
+
       if (e.deltaY > 0) {
         scrollAccRef.current = Math.min(SCROLL_TO_MINIMIZE, scrollAccRef.current + Math.abs(e.deltaY));
       } else {
@@ -499,7 +515,8 @@ export default function HomePage() {
       }
 
       const p = scrollAccRef.current / SCROLL_TO_MINIMIZE;
-      applyScrollProgress(p);
+      latestP = p;
+      if (!raf) raf = window.requestAnimationFrame(() => applyScrollProgress(latestP));
 
       if (p >= 1) {
         scrollAccRef.current = 0;
@@ -513,7 +530,10 @@ export default function HomePage() {
     };
 
     window.addEventListener("wheel", onWheel, { passive: true });
-    return () => window.removeEventListener("wheel", onWheel);
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
   }, [minimizeTerminal]);
 
   // ─── render ───────────────────────────────────────────────────────────────
@@ -613,7 +633,7 @@ export default function HomePage() {
               </Link>
               <Link href="/lab" className="hero-cta">Lab</Link>
               <Link href="/cv" className="hero-cta">CV</Link>
-              <Link href="/projects/ai-obs" className="hero-cta">Voir AI-Obs</Link>
+              <Link href="/projects/ai-obs" className="hero-cta">See AI-Obs</Link>
               <button className="hero-preview-card hero-video-cta" type="button">
                 <span className="preview-thumb">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -632,10 +652,10 @@ export default function HomePage() {
             </div>
             <div className="spec-body">
               <div className="spec-row"><span>STACK</span><span>PYTHON · API · DOCKER · TERRAFORM</span></div>
-              <div className="spec-row"><span>FOCUS</span><span>BACKEND · DEVOPS · OBSERVABILITÉ IA</span></div>
-              <div className="spec-row"><span>PARCOURS</span><span>ÉTUDIANT EN INFORMATIQUE</span></div>
+              <div className="spec-row"><span>FOCUS</span><span>BACKEND · DEVOPS · AI OBSERVABILITY</span></div>
+              <div className="spec-row"><span>BACKGROUND</span><span>CS STUDENT</span></div>
               <div className="spec-row"><span>BASE</span><span>FRANCE</span></div>
-              <div className="spec-row"><span>STATUS</span><span className="ok">RECHERCHE UNE ALTERNANCE</span></div>
+              <div className="spec-row"><span>STATUS</span><span className="ok">SEEKING WORK-STUDY</span></div>
             </div>
           </div>
           <div className="hero-bottom-strip">
@@ -657,7 +677,7 @@ export default function HomePage() {
             {projects.filter((project) => project.featured).map((project) => (
               <Link className="proj-cell" href={`/projects/${project.slug}`} key={project.slug}>
                 <div className="proj-thumb">
-                  {project.flagship && <span className="proj-flagship">PROJET PHARE</span>}
+                  {project.flagship && <span className="proj-flagship">FLAGSHIP</span>}
                   <div className="thumb-overlay"></div>
                   <div className="thumb-content">
                     <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>

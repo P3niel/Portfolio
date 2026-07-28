@@ -5,7 +5,7 @@ export default function CvExperience({ experiences }: { experiences: Experience[
   return (
     <section className="mb-10">
       <h2 className="text-xs font-medium text-accent tracking-widest uppercase mb-6">
-        <span className="text-ink-3">#</span> Expériences
+        <span className="text-ink-3">#</span> Experience
       </h2>
       <div className="space-y-8">
         {experiences.map((exp) => (
@@ -29,7 +29,7 @@ export default function CvExperience({ experiences }: { experiences: Experience[
                 href={`/projects/${exp.projectSlug}`}
                 className="inline-flex items-center gap-1 text-xs text-accent hover:underline underline-offset-4"
               >
-                → Voir l’étude de cas associée
+                → See related case study
               </Link>
             )}
           </div>

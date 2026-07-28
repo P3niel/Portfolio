@@ -196,7 +196,7 @@ export default function LabPage() {
     .sort()
     .at(-1);
 
-  const modeLabel = mode === "ok" ? "live" : mode === "demo" ? "demo controlled" : mode;
+  const modeLabel = mode === "ok" ? "live" : mode === "demo" ? "demo controlled" : mode === "loading" ? "loading" : "offline";
   const modelVersion = mlflow?.latest_version ?? health?.model_version ?? metrics?.modelVersion ?? null;
   const latencyMs = metrics?.latencyP99 != null ? `${Math.round(metrics.latencyP99 * 1000)}` : null;
   const confidence = prediction?.confidence != null ? `${Math.round(prediction.confidence * 100)}%` : null;
