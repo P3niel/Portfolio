@@ -19,6 +19,7 @@ export interface Project {
   featured?: boolean;
   flagship?: boolean;
   domain?: string;
+  goal?: string;
   role?: string;
   timeframe?: string;
   impact?: { label: string; value: string }[];
@@ -219,6 +220,7 @@ export const projects: Project[] = [
     featured: true,
     flagship: true,
     domain: "AI Systems Observability",
+    goal: "AI Observability",
     role: "Design, architecture, and backend development",
     timeframe: "Personal project · In progress",
     impact: [
@@ -251,6 +253,7 @@ Static dashboard -> review surface`,
     githubUrl: "https://github.com/LambdaSection/NeuralDBG",
     featured: true,
     domain: "Open source collaboration · Lambda-section",
+    goal: "Neural Debugging",
     role: "Co-founder · Lead DevOps/MLOps",
     timeframe: "Collaborative contribution",
     impact: [
@@ -293,6 +296,7 @@ Clean Git repository and traceable changes`,
     tags: ["Docker", "Terraform", "Linux", "CI/CD", "DevOps"],
     featured: true,
     domain: "Infrastructure and automation",
+    goal: "DevOps Research",
     role: "Design and implementation",
     timeframe: "Personal project",
     impact: [
@@ -316,6 +320,7 @@ Clean Git repository and traceable changes`,
     liveUrl: "/",
     featured: true,
     domain: "Frontend, platform, and developer experience",
+    goal: "Public Documentation",
     role: "Full-stack design and development",
     timeframe: "Personal project · Public frontend",
     impact: [

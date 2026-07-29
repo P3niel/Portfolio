@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, type FormEvent } from "react";
+import { useEffect, useRef, useState, useCallback, type ComponentType, type FormEvent } from "react";
 import Link from "next/link";
 import { cv, projects } from "@/lib/config";
+import { AiObsEyeSvg } from "@/components/projects/ascii/AiObsEyeSvg";
+import { NeuraldbgNeuronSvg } from "@/components/projects/ascii/NeuraldbgNeuronSvg";
+import { DevopsLabMotifSvg } from "@/components/projects/ascii/DevopsLabMotifSvg";
+import { NeuralNetSvg } from "@/components/projects/NeuralNetSvg";
+import {
+  KubernetesLogo,
+  MlflowLogo,
+  PythonLogo,
+  PrometheusLogo,
+  GithubActionsLogo,
+  DockerLogo,
+} from "@/components/StackLogos";
 
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
@@ -15,6 +27,12 @@ const projectPreviews: Record<string, string> = {
   "toxic-ai": `signal ──> anomaly?\n  confidence: ███████░\n  model mood: curious`,
   "infra-terraform-preprod": `terraform plan\n  aws preprod: OFF\n  cloud bill: protected`,
   sentinelops: `cpu · ram · disk\n  anomalies: watching\n  sentinel status: READY`,
+};
+
+const projectAsciiSvg: Record<string, ComponentType<{ className?: string }>> = {
+  "ai-obs": AiObsEyeSvg,
+  neuraldbg: NeuraldbgNeuronSvg,
+  "devops-lab": DevopsLabMotifSvg,
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -35,6 +53,7 @@ export default function HomePage() {
   const dotRedRef = useRef<HTMLSpanElement>(null);
   const dotYellowRef = useRef<HTMLSpanElement>(null);
   const dotGreenRef = useRef<HTMLSpanElement>(null);
+  const skillIconRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const termStateRef = useRef<"closed" | "minimized" | "expanded">("minimized");
   const scrollAccRef = useRef(0);
@@ -193,6 +212,27 @@ export default function HomePage() {
     };
   }, []);
 
+  // ── skill logo reveal (one-shot per element, on first scroll into view) ──
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") return;
+    const targets = skillIconRefs.current.filter((el): el is HTMLDivElement => el !== null);
+    if (targets.length === 0) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          io.unobserve(entry.target);
+          entry.target.classList.add("is-visible");
+        });
+      },
+      { threshold: 0.3 }
+    );
+    targets.forEach((el) => io.observe(el));
+
+    return () => io.disconnect();
+  }, []);
+
   // ── terminal helpers ─────────────────────────────────────────────────────
   const appendLine = useCallback((text: string, cls: string) => {
     const screen = tScreenRef.current;
@@ -336,6 +376,7 @@ export default function HomePage() {
       { t: "> loading routes: [home, cv, projects, lab, contact]", cls: "t-dim" },
       { t: `> loading projects: [${projects.map((project) => project.slug).join(", ")}]`, cls: "t-dim" },
       { t: "> loading profile: backend, devops, ia, observability", cls: "t-dim" },
+      { t: "> hosting: vercel edge + hetzner vps, low-carbon grid", cls: "t-dim" },
       { t: "> contact channels connected ... ok", cls: "t-dim" },
       { t: "> project pages connected ... ok", cls: "t-dim" },
       { t: "> portfolio context ready", cls: "t-dim" },
@@ -377,7 +418,10 @@ export default function HomePage() {
     tScreenRef.current?.classList.add("expanded");
     if (tCmdbarRef.current) tCmdbarRef.current.style.display = "";
     if (tInputRowRef.current) tInputRowRef.current.style.display = "";
-    if (tTitleStatusRef.current) tTitleStatusRef.current.textContent = "● running";
+    if (tTitleStatusRef.current) {
+      tTitleStatusRef.current.textContent = "● running";
+      tTitleStatusRef.current.classList.add("t-status-live");
+    }
     document.body.style.paddingBottom = "42px";
     tReopenFabRef.current?.classList.remove("visible");
     setDotState("expanded");
@@ -396,7 +440,10 @@ export default function HomePage() {
     tScreenRef.current?.classList.remove("expanded");
     if (tCmdbarRef.current) tCmdbarRef.current.style.display = "none";
     if (tInputRowRef.current) tInputRowRef.current.style.display = "none";
-    if (tTitleStatusRef.current) tTitleStatusRef.current.textContent = "";
+    if (tTitleStatusRef.current) {
+      tTitleStatusRef.current.textContent = "";
+      tTitleStatusRef.current.classList.remove("t-status-live");
+    }
     document.body.style.paddingBottom = "42px";
     tReopenFabRef.current?.classList.remove("visible");
     setDotState("minimized");
@@ -411,7 +458,10 @@ export default function HomePage() {
     card.style.transform = "";
     if (tCmdbarRef.current) tCmdbarRef.current.style.display = "none";
     if (tInputRowRef.current) tInputRowRef.current.style.display = "none";
-    if (tTitleStatusRef.current) tTitleStatusRef.current.textContent = "";
+    if (tTitleStatusRef.current) {
+      tTitleStatusRef.current.textContent = "";
+      tTitleStatusRef.current.classList.remove("t-status-live");
+    }
     document.body.style.paddingBottom = "0";
     setDotState("closed");
     tReopenFabRef.current?.classList.add("visible");
@@ -655,6 +705,7 @@ export default function HomePage() {
               <div className="spec-row"><span>FOCUS</span><span>BACKEND · DEVOPS · AI OBSERVABILITY</span></div>
               <div className="spec-row"><span>BACKGROUND</span><span>CS STUDENT</span></div>
               <div className="spec-row"><span>BASE</span><span>FRANCE</span></div>
+              <div className="spec-row"><span>GRID</span><span className="solar">LOW-CARBON EDGE</span></div>
               <div className="spec-row"><span>STATUS</span><span className="ok">SEEKING WORK-STUDY</span></div>
             </div>
           </div>
@@ -674,23 +725,71 @@ export default function HomePage() {
             <div className="brutal-meta">{String(projects.length).padStart(2, "0")} · PROJECTS</div>
           </div>
           <div className="proj-grid">
-            {projects.filter((project) => project.featured).map((project) => (
-              <Link className="proj-cell" href={`/projects/${project.slug}`} key={project.slug}>
-                <div className="proj-thumb">
-                  {project.flagship && <span className="proj-flagship">FLAGSHIP</span>}
-                  <div className="thumb-overlay"></div>
-                  <div className="thumb-content">
-                    <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>
+            {projects.filter((project) => project.featured).map((project) => {
+              const ArtSvg = projectAsciiSvg[project.slug];
+              return (
+                <Link
+                  className="proj-cell"
+                  href={`/projects/${project.slug}`}
+                  key={project.slug}
+                  data-slug={project.slug}
+                >
+                  <div className="proj-thumb">
+                    {project.flagship && <span className="proj-flagship">FLAGSHIP</span>}
+                    <div className="thumb-overlay"></div>
+                    {project.slug === "neuraldbg" && (
+                      <div className="thumb-neural-net" aria-hidden="true">
+                        <NeuralNetSvg />
+                      </div>
+                    )}
+                    <div
+                      className={`thumb-content${
+                        project.slug === "portfolio" ? " thumb-content-term" : ArtSvg ? " thumb-content-art" : ""
+                      }`}
+                    >
+                      {project.slug === "portfolio" ? (
+                        <div className="mini-term" aria-hidden="true">
+                          <div className="t-titlebar">
+                            <div className="t-dots">
+                              <span className="t-dot red"></span>
+                              <span className="t-dot yellow"></span>
+                              <span className="t-dot green"></span>
+                            </div>
+                            <div className="t-title">zsh</div>
+                            <span className="t-ok mini-term-status">● running</span>
+                          </div>
+                          <div className="t-screen">
+                            <div className="t-line">
+                              <span className="t-prompt">peniel@devops:~$</span>
+                              <span className="mini-term-cursor"></span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : ArtSvg ? (
+                        <ArtSvg className="thumb-ascii-svg" />
+                      ) : (
+                        <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>
+                      )}
+                    </div>
+                    {project.slug === "ai-obs" && (
+                      <>
+                        <div className="thumb-eyelid thumb-eyelid-top" aria-hidden="true"></div>
+                        <div className="thumb-eyelid thumb-eyelid-bottom" aria-hidden="true"></div>
+                      </>
+                    )}
+                    <div className="thumb-grid"></div>
+                    <div className="thumb-hover-label">
+                      {project.goal ?? project.domain ?? "Case Study"}
+                    </div>
                   </div>
-                  <div className="thumb-grid"></div>
-                </div>
-                <div className="proj-meta">
-                  <div className="proj-name">{project.name.toUpperCase()}</div>
-                  <div className="proj-sub">{project.tags.slice(0, 2).join(" · ").toUpperCase()}</div>
-                  <div className="proj-arrow">↗</div>
-                </div>
-              </Link>
-            ))}
+                  <div className="proj-meta">
+                    <div className="proj-name">{project.name.toUpperCase()}</div>
+                    <div className="proj-sub">{project.tags.slice(0, 2).join(" · ").toUpperCase()}</div>
+                    <div className="proj-arrow">↗</div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -705,15 +804,20 @@ export default function HomePage() {
           </div>
           <div className="skill-grid">
             {[
-              { title: "INFRA", desc: "Kubernetes, Terraform, Helm. Clusters as code, no snowflakes.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="4" y="4" width="24" height="24"/><line x1="4" y1="12" x2="28" y2="12"/><line x1="12" y1="4" x2="12" y2="28"/><circle cx="20" cy="20" r="2.5" fill="currentColor"/></svg>) },
-              { title: "MLOPS", desc: "MLflow, Airflow, Kubeflow, BentoML. Reproducible from notebook to prod.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 24 L12 16 L18 20 L28 8"/><circle cx="12" cy="16" r="2" fill="currentColor"/><circle cx="18" cy="20" r="2" fill="currentColor"/><line x1="4" y1="28" x2="28" y2="28"/></svg>) },
-              { title: "LANGUAGES", desc: "Python, Go, Bash, TypeScript. Right tool for the right blast radius.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><polyline points="10,8 4,16 10,24"/><polyline points="22,8 28,16 22,24"/><line x1="18" y1="6" x2="14" y2="26"/></svg>) },
-              { title: "OBSERVE", desc: "Prometheus, Grafana, Loki, OpenTelemetry. Pages stay quiet on weekends.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="16" cy="16" r="10"/><circle cx="16" cy="16" r="3" fill="currentColor"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="16" y1="26" x2="16" y2="30"/><line x1="2" y1="16" x2="6" y2="16"/><line x1="26" y1="16" x2="30" y2="16"/></svg>) },
-              { title: "CI / CD", desc: "GitHub Actions, ArgoCD, Tekton. Ship safely, often, with rollback.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M8 6 L24 6 L28 12 L28 26 L4 26 L4 12 Z"/><line x1="4" y1="12" x2="28" y2="12"/><circle cx="16" cy="19" r="3.5"/></svg>) },
-              { title: "CONTAINERS", desc: "Docker, containerd, BuildKit. Sealed, reproducible, multi-arch.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="6" y="6" width="20" height="20"/><rect x="10" y="10" width="12" height="12"/><line x1="6" y1="14" x2="26" y2="14"/><line x1="6" y1="22" x2="26" y2="22"/></svg>) },
-            ].map((s) => (
+              { title: "INFRA", desc: "Kubernetes, Terraform, Helm. Clusters as code, no snowflakes.", Logo: KubernetesLogo },
+              { title: "MLOPS", desc: "MLflow, Airflow, Kubeflow, BentoML. Reproducible from notebook to prod.", Logo: MlflowLogo },
+              { title: "LANGUAGES", desc: "Python, Go, Bash, TypeScript. Right tool for the right blast radius.", Logo: PythonLogo },
+              { title: "OBSERVE", desc: "Prometheus, Grafana, Loki, OpenTelemetry. Pages stay quiet on weekends.", Logo: PrometheusLogo },
+              { title: "CI / CD", desc: "GitHub Actions, ArgoCD, Tekton. Ship safely, often, with rollback.", Logo: GithubActionsLogo },
+              { title: "CONTAINERS", desc: "Docker, containerd, BuildKit. Sealed, reproducible, multi-arch.", Logo: DockerLogo },
+            ].map((s, i) => (
               <div className="skill-cell" key={s.title}>
-                <div className="skill-icon">{s.icon}</div>
+                <div
+                  className="skill-icon"
+                  ref={(el) => { skillIconRefs.current[i] = el; }}
+                >
+                  <s.Logo className="skill-icon-logo" />
+                </div>
                 <div className="skill-title">{s.title}</div>
                 <div className="skill-desc">{s.desc}</div>
               </div>
@@ -828,6 +932,7 @@ export default function HomePage() {
                 <span className="contact-tag">● OPEN TO WORK</span>
                 <span className="contact-tag">● REMOTE / EU</span>
                 <span className="contact-tag">● UTC+1</span>
+                <span className="contact-tag solar">● LOW-CARBON HOST</span>
               </div>
             </div>
             <div className="contact-col">
@@ -864,7 +969,7 @@ export default function HomePage() {
         <div className="footer-row">
           <span>● PENIEL.DEV</span>
           <span>© 2026 · ALL RIGHTS RESERVED</span>
-          <span>BUILT WITH CARE</span>
+          <span>BUILT WITH CARE · LOW-CARBON HOSTING</span>
         </div>
       </footer>
 
