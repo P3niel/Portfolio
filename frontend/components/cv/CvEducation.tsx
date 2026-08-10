@@ -4,7 +4,7 @@ export default function CvEducation({ education }: { education: Education[] }) {
   return (
     <section className="mb-10">
       <h2 className="text-xs font-medium text-accent tracking-widest uppercase mb-6">
-        <span className="text-ink-3">#</span> Formation
+        <span className="text-ink-3">#</span> Education
       </h2>
       <div className="space-y-4">
         {education.map((edu) => (

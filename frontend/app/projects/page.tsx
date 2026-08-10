@@ -3,8 +3,8 @@ import Nav from "@/components/Nav";
 import ProjectCard from "@/components/projects/ProjectCard";
 
 export const metadata = {
-  title: "Projets — Peniel Teko-Agbo",
-  description: "Études de cas en backend, DevOps et observabilité des systèmes IA.",
+  title: "Projects — Peniel Teko-Agbo",
+  description: "Case studies in backend, DevOps and AI systems observability.",
 };
 
 export default function ProjectsPage() {
@@ -80,7 +80,7 @@ export default function ProjectsPage() {
         </section>
 
         {projects.length === 0 && (
-          <p className="text-sm text-ink-3">Aucun projet pour l&apos;instant.</p>
+          <p className="text-sm text-ink-3">No project yet.</p>
         )}
       </div>
     </div>

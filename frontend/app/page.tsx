@@ -1,8 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, type FormEvent } from "react";
+import { useEffect, useRef, useState, useCallback, type ComponentType, type FormEvent } from "react";
 import Link from "next/link";
 import { cv, projects } from "@/lib/config";
+import ProfileBento from "@/components/home/ProfileBento";
+import WhatIDo from "@/components/home/WhatIDo";
+import LookingFor from "@/components/home/LookingFor";
+import { AiObsEyeSvg } from "@/components/projects/ascii/AiObsEyeSvg";
+import { NeuraldbgNeuronSvg } from "@/components/projects/ascii/NeuraldbgNeuronSvg";
+import { DevopsLabMotifSvg } from "@/components/projects/ascii/DevopsLabMotifSvg";
+import { NeuralNetSvg } from "@/components/projects/NeuralNetSvg";
+import {
+  KubernetesLogo,
+  MlflowLogo,
+  PythonLogo,
+  PrometheusLogo,
+  GithubActionsLogo,
+  DockerLogo,
+} from "@/components/StackLogos";
 
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
@@ -17,10 +32,25 @@ const projectPreviews: Record<string, string> = {
   sentinelops: `cpu · ram · disk\n  anomalies: watching\n  sentinel status: READY`,
 };
 
+const statusClass: Record<string, string> = {
+  Production: "status-production",
+  "Active Development": "status-active",
+  MVP: "status-mvp",
+  Prototype: "status-prototype",
+};
+
+const projectAsciiSvg: Record<string, ComponentType<{ className?: string }>> = {
+  "ai-obs": AiObsEyeSvg,
+  neuraldbg: NeuraldbgNeuronSvg,
+  "devops-lab": DevopsLabMotifSvg,
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    typeof window === "undefined" ? "dark" : (localStorage.getItem("portfolio-theme") as "dark" | "light") || "dark"
+  );
   const heroStageRef = useRef<HTMLDivElement>(null);
   const mfsRef = useRef<HTMLDivElement>(null);
   const csCardRef = useRef<HTMLDivElement>(null);
@@ -33,17 +63,13 @@ export default function HomePage() {
   const dotRedRef = useRef<HTMLSpanElement>(null);
   const dotYellowRef = useRef<HTMLSpanElement>(null);
   const dotGreenRef = useRef<HTMLSpanElement>(null);
+  const skillIconRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const termStateRef = useRef<"closed" | "minimized" | "expanded">("minimized");
   const scrollAccRef = useRef(0);
   const bootedRef = useRef(false);
 
   // ── theme ────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const saved = (localStorage.getItem("portfolio-theme") || "dark") as "dark" | "light";
-    setTheme(saved);
-  }, []);
-
   useEffect(() => {
     document.body.classList.toggle("light", theme === "light");
     localStorage.setItem("portfolio-theme", theme);
@@ -58,11 +84,20 @@ export default function HomePage() {
     let heroStart = 0;
     let heroScrollable = 1;
     let viewportHeight = window.innerHeight;
+    let viewportWidth = window.innerWidth;
 
     function measureHero() {
       heroStart = hero!.offsetTop;
       viewportHeight = window.innerHeight;
+      viewportWidth = window.innerWidth;
       heroScrollable = Math.max(1, hero!.offsetHeight - viewportHeight);
+    }
+
+    // mirrors the .megatext-line font-size clamp(180px, 27vw + growPx, 560px) formula,
+    // so growth can be expressed as a compositor-only transform: scale() instead of
+    // an animated font-size (which forces layout on every scroll frame)
+    function megatextFontSize(growPx: number) {
+      return Math.min(560, Math.max(180, viewportWidth * 0.27 + growPx));
     }
 
     function updateHero() {
@@ -77,15 +112,15 @@ export default function HomePage() {
       const nameExit = clamp01((scrolled - heroScrollable - nameLinger) / nameFadeDistance);
       const nameProgress = Math.pow(p, 0.85);
       const megaNameProgress = Math.pow(p, 0.9);
-      const nameFontSize = 11.5 + nameProgress * 2.6;
-      const megaNameGrow = megaNameProgress * 118;
+      const nameScale = (11.5 + nameProgress * 2.6) / 14.1;
+      const megaScale = megatextFontSize(megaNameProgress * 118) / megatextFontSize(118);
       stage!.style.setProperty("--p", p.toFixed(4));
       stage!.style.setProperty("--hero-copy-y", `${(-86 * surface).toFixed(2)}px`);
       stage!.style.setProperty("--hero-card-y", `${(-72 * surface).toFixed(2)}px`);
       stage!.style.setProperty("--hero-name-y", "0px");
       stage!.style.setProperty("--hero-name-progress", nameProgress.toFixed(4));
-      stage!.style.setProperty("--hero-name-font-size", `${nameFontSize.toFixed(2)}px`);
-      stage!.style.setProperty("--hero-megatext-grow", `${megaNameGrow.toFixed(2)}px`);
+      stage!.style.setProperty("--hero-name-scale", nameScale.toFixed(4));
+      stage!.style.setProperty("--hero-megatext-scale", megaScale.toFixed(4));
       stage!.style.setProperty("--hero-copy-opacity", surfaceOpacity.toFixed(4));
       stage!.style.setProperty("--hero-card-opacity", surfaceOpacity.toFixed(4));
       stage!.style.setProperty("--hero-name-opacity", clamp01(1 - nameExit).toFixed(4));
@@ -148,6 +183,9 @@ export default function HomePage() {
       sectionGeometry.forEach(({ element, top }) => { if (probe >= top) cur = element.id; });
       const nearBottom = sy + viewportHeight >= documentHeight - 80;
       if (nearBottom && sections.length) cur = sections[sections.length - 1].id;
+      if (cur === "profile") cur = "about"; // profile has no nav link of its own — it's part of about
+      if (cur === "looking-for") cur = "what-i-do"; // looking-for has no nav link of its own — it's part of what i do
+      if (cur === "skills") cur = "projects"; // core stack falls under projects in the nav
       navLinks.forEach((l) => { l.classList.toggle("active", l.getAttribute("href") === "#" + cur); });
 
       // per-section shadow
@@ -185,6 +223,27 @@ export default function HomePage() {
       window.removeEventListener("resize", handleScrollLayoutResize);
       if (raf) window.cancelAnimationFrame(raf);
     };
+  }, []);
+
+  // ── skill logo reveal (one-shot per element, on first scroll into view) ──
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof IntersectionObserver === "undefined") return;
+    const targets = skillIconRefs.current.filter((el): el is HTMLDivElement => el !== null);
+    if (targets.length === 0) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          io.unobserve(entry.target);
+          entry.target.classList.add("is-visible");
+        });
+      },
+      { threshold: 0.3 }
+    );
+    targets.forEach((el) => io.observe(el));
+
+    return () => io.disconnect();
   }, []);
 
   // ── terminal helpers ─────────────────────────────────────────────────────
@@ -234,9 +293,9 @@ export default function HomePage() {
         <div class="t-line t-muted">whoami:</div>
         <div class="t-line">&nbsp;&nbsp;${cv.name} — ${cv.title}</div>
         <div class="t-line t-muted">status:</div>
-        <div class="t-line">&nbsp;&nbsp;Étudiant en informatique · recherche une alternance</div>
+        <div class="t-line">&nbsp;&nbsp;Computer science student · seeking a work-study opportunity</div>
         <div class="t-line t-muted">focus:</div>
-        <div class="t-line">&nbsp;&nbsp;Backend · DevOps · IA · Observabilité</div>
+        <div class="t-line">&nbsp;&nbsp;Backend · DevOps · AI · Observability</div>
         <div class="t-line t-muted">cat /etc/contact:</div>
         <div class="t-line">&nbsp;&nbsp;email: ${cv.contact.email}</div>
         <div class="t-line">&nbsp;&nbsp;gh:    github.com/P3niel</div>
@@ -330,6 +389,7 @@ export default function HomePage() {
       { t: "> loading routes: [home, cv, projects, lab, contact]", cls: "t-dim" },
       { t: `> loading projects: [${projects.map((project) => project.slug).join(", ")}]`, cls: "t-dim" },
       { t: "> loading profile: backend, devops, ia, observability", cls: "t-dim" },
+      { t: "> hosting: vercel edge + hetzner vps, low-carbon grid", cls: "t-dim" },
       { t: "> contact channels connected ... ok", cls: "t-dim" },
       { t: "> project pages connected ... ok", cls: "t-dim" },
       { t: "> portfolio context ready", cls: "t-dim" },
@@ -371,7 +431,10 @@ export default function HomePage() {
     tScreenRef.current?.classList.add("expanded");
     if (tCmdbarRef.current) tCmdbarRef.current.style.display = "";
     if (tInputRowRef.current) tInputRowRef.current.style.display = "";
-    if (tTitleStatusRef.current) tTitleStatusRef.current.textContent = "● running";
+    if (tTitleStatusRef.current) {
+      tTitleStatusRef.current.textContent = "● running";
+      tTitleStatusRef.current.classList.add("t-status-live");
+    }
     document.body.style.paddingBottom = "42px";
     tReopenFabRef.current?.classList.remove("visible");
     setDotState("expanded");
@@ -390,7 +453,10 @@ export default function HomePage() {
     tScreenRef.current?.classList.remove("expanded");
     if (tCmdbarRef.current) tCmdbarRef.current.style.display = "none";
     if (tInputRowRef.current) tInputRowRef.current.style.display = "none";
-    if (tTitleStatusRef.current) tTitleStatusRef.current.textContent = "";
+    if (tTitleStatusRef.current) {
+      tTitleStatusRef.current.textContent = "";
+      tTitleStatusRef.current.classList.remove("t-status-live");
+    }
     document.body.style.paddingBottom = "42px";
     tReopenFabRef.current?.classList.remove("visible");
     setDotState("minimized");
@@ -405,7 +471,10 @@ export default function HomePage() {
     card.style.transform = "";
     if (tCmdbarRef.current) tCmdbarRef.current.style.display = "none";
     if (tInputRowRef.current) tInputRowRef.current.style.display = "none";
-    if (tTitleStatusRef.current) tTitleStatusRef.current.textContent = "";
+    if (tTitleStatusRef.current) {
+      tTitleStatusRef.current.textContent = "";
+      tTitleStatusRef.current.classList.remove("t-status-live");
+    }
     document.body.style.paddingBottom = "0";
     setDotState("closed");
     tReopenFabRef.current?.classList.add("visible");
@@ -474,11 +543,18 @@ export default function HomePage() {
   // ── scroll-linked terminal collapse ──────────────────────────────────────
   useEffect(() => {
     const SCROLL_TO_MINIMIZE = 180;
+    let raf = 0;
+    let cardH = 0;
+    let latestP = 0;
+
+    function measureCard() {
+      cardH = csCardRef.current?.offsetHeight ?? 0;
+    }
 
     function applyScrollProgress(p: number) {
+      raf = 0;
       const card = csCardRef.current;
       if (!card || p <= 0 || p >= 1) return;
-      const cardH = card.offsetHeight;
       const peekH = 108;
       const maxTranslate = cardH - peekH;
       const translateY = p * maxTranslate;
@@ -492,6 +568,9 @@ export default function HomePage() {
       const screen = tScreenRef.current;
       if (screen && (e.target as HTMLElement).closest("#t-screen")) return;
 
+      // remeasure once per gesture (not per wheel tick) to avoid layout thrashing
+      if (scrollAccRef.current === 0) measureCard();
+
       if (e.deltaY > 0) {
         scrollAccRef.current = Math.min(SCROLL_TO_MINIMIZE, scrollAccRef.current + Math.abs(e.deltaY));
       } else {
@@ -499,7 +578,8 @@ export default function HomePage() {
       }
 
       const p = scrollAccRef.current / SCROLL_TO_MINIMIZE;
-      applyScrollProgress(p);
+      latestP = p;
+      if (!raf) raf = window.requestAnimationFrame(() => applyScrollProgress(latestP));
 
       if (p >= 1) {
         scrollAccRef.current = 0;
@@ -513,7 +593,10 @@ export default function HomePage() {
     };
 
     window.addEventListener("wheel", onWheel, { passive: true });
-    return () => window.removeEventListener("wheel", onWheel);
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
   }, [minimizeTerminal]);
 
   // ─── render ───────────────────────────────────────────────────────────────
@@ -522,10 +605,8 @@ export default function HomePage() {
       {/* NAVBAR */}
       <nav className="navbar" id="navbar">
         <a href="#about" className="nav-link active">about</a>
+        <a href="#what-i-do" className="nav-link">what i do</a>
         <a href="#projects" className="nav-link">projects</a>
-        <a href="#skills" className="nav-link">skills</a>
-        <a href="#method" className="nav-link">method</a>
-        <a href="#metrics" className="nav-link">metrics</a>
         <a href="#contact" className="nav-link">contact</a>
         <button
           className="theme-switch"
@@ -599,30 +680,18 @@ export default function HomePage() {
               designed for <em>real constraints.</em>
             </h1>
             <p className="hero-bio">
-              From backend code to delivery workflows.
-              <br />
-              Observable, documented, and built to be validated.
+              From backend code to delivery workflows — observable, documented, and built to be validated.
               <br />
               <br />
-              Computer science student focused on Python, DevOps, and AI observability, currently looking for a work-study opportunity.
+              Computer science student focused on Python, DevOps, and AI observability, open to work-study opportunities.
             </p>
             <div className="hero-cta-row">
               <Link href="/projects" className="hero-cta primary">
-                <span>Projects</span>
+                <span>View Projects</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </Link>
-              <Link href="/lab" className="hero-cta">Lab</Link>
+              <a href="#contact" className="hero-cta">Contact Me</a>
               <Link href="/cv" className="hero-cta">CV</Link>
-              <Link href="/projects/ai-obs" className="hero-cta">Voir AI-Obs</Link>
-              <button className="hero-preview-card hero-video-cta" type="button">
-                <span className="preview-thumb">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                </span>
-                <span className="preview-text">
-                  <span className="preview-eyebrow">WATCH</span>
-                  <span className="preview-title">3-min video</span>
-                </span>
-              </button>
             </div>
           </div>
           <div className="hero-spec-card">
@@ -632,10 +701,11 @@ export default function HomePage() {
             </div>
             <div className="spec-body">
               <div className="spec-row"><span>STACK</span><span>PYTHON · API · DOCKER · TERRAFORM</span></div>
-              <div className="spec-row"><span>FOCUS</span><span>BACKEND · DEVOPS · OBSERVABILITÉ IA</span></div>
-              <div className="spec-row"><span>PARCOURS</span><span>ÉTUDIANT EN INFORMATIQUE</span></div>
+              <div className="spec-row"><span>FOCUS</span><span>BACKEND · DEVOPS · AI OBSERVABILITY</span></div>
+              <div className="spec-row"><span>BACKGROUND</span><span>CS STUDENT</span></div>
               <div className="spec-row"><span>BASE</span><span>FRANCE</span></div>
-              <div className="spec-row"><span>STATUS</span><span className="ok">RECHERCHE UNE ALTERNANCE</span></div>
+              <div className="spec-row"><span>GRID</span><span className="solar">LOW-CARBON EDGE</span></div>
+              <div className="spec-row"><span>STATUS</span><span className="ok">SEEKING WORK-STUDY</span></div>
             </div>
           </div>
           <div className="hero-bottom-strip">
@@ -645,55 +715,126 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* /03 SELECTED WORK */}
+      {/* /01 PROFILE */}
+      <section id="profile" className="brutal-section">
+        <div className="brutal-frame">
+          <div className="brutal-header">
+            <div className="brutal-num">/01</div>
+            <div className="brutal-title">PROFILE</div>
+            <div className="brutal-meta">FOR RECRUITERS &amp; DECISION-MAKERS</div>
+          </div>
+          <ProfileBento />
+        </div>
+      </section>
+
+      <WhatIDo />
+      <LookingFor />
+
+      {/* /04 SELECTED WORK */}
       <section id="projects" className="brutal-section">
         <div className="brutal-frame">
           <div className="brutal-header">
-            <div className="brutal-num">/03</div>
+            <div className="brutal-num">/04</div>
             <div className="brutal-title">SELECTED WORK</div>
             <div className="brutal-meta">{String(projects.length).padStart(2, "0")} · PROJECTS</div>
           </div>
           <div className="proj-grid">
-            {projects.filter((project) => project.featured).map((project) => (
-              <Link className="proj-cell" href={`/projects/${project.slug}`} key={project.slug}>
-                <div className="proj-thumb">
-                  {project.flagship && <span className="proj-flagship">PROJET PHARE</span>}
-                  <div className="thumb-overlay"></div>
-                  <div className="thumb-content">
-                    <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>
+            {projects.filter((project) => project.featured).map((project) => {
+              const ArtSvg = projectAsciiSvg[project.slug];
+              return (
+                <Link
+                  className="proj-cell"
+                  href={`/projects/${project.slug}`}
+                  key={project.slug}
+                  data-slug={project.slug}
+                >
+                  <div className="proj-thumb">
+                    {project.flagship && <span className="proj-flagship">FLAGSHIP</span>}
+                    <div className="thumb-overlay"></div>
+                    {project.slug === "neuraldbg" && (
+                      <div className="thumb-neural-net" aria-hidden="true">
+                        <NeuralNetSvg />
+                      </div>
+                    )}
+                    <div
+                      className={`thumb-content${
+                        project.slug === "portfolio" ? " thumb-content-term" : ArtSvg ? " thumb-content-art" : ""
+                      }`}
+                    >
+                      {project.slug === "portfolio" ? (
+                        <div className="mini-term" aria-hidden="true">
+                          <div className="t-titlebar">
+                            <div className="t-dots">
+                              <span className="t-dot red"></span>
+                              <span className="t-dot yellow"></span>
+                              <span className="t-dot green"></span>
+                            </div>
+                            <div className="t-title">zsh</div>
+                            <span className="t-ok mini-term-status">● running</span>
+                          </div>
+                          <div className="t-screen">
+                            <div className="t-line">
+                              <span className="t-prompt">peniel@devops:~$</span>
+                              <span className="mini-term-cursor"></span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : ArtSvg ? (
+                        <ArtSvg className="thumb-ascii-svg" />
+                      ) : (
+                        <pre className="thumb-code">{`> ${project.name}\n─────────────\n${projectPreviews[project.slug] ?? "system ready"}`}</pre>
+                      )}
+                    </div>
+                    {project.slug === "ai-obs" && (
+                      <>
+                        <div className="thumb-eyelid thumb-eyelid-top" aria-hidden="true"></div>
+                        <div className="thumb-eyelid thumb-eyelid-bottom" aria-hidden="true"></div>
+                      </>
+                    )}
+                    <div className="thumb-grid"></div>
+                    <div className="thumb-hover-label">
+                      {project.goal ?? project.domain ?? "Case Study"}
+                    </div>
                   </div>
-                  <div className="thumb-grid"></div>
-                </div>
-                <div className="proj-meta">
-                  <div className="proj-name">{project.name.toUpperCase()}</div>
-                  <div className="proj-sub">{project.tags.slice(0, 2).join(" · ").toUpperCase()}</div>
-                  <div className="proj-arrow">↗</div>
-                </div>
-              </Link>
-            ))}
+                  <div className="proj-meta">
+                    <div className="proj-name">{project.name.toUpperCase()}</div>
+                    {project.status && (
+                      <span className={`status-pill ${statusClass[project.status] ?? ""}`}>{project.status}</span>
+                    )}
+                    <div className="proj-sub">{project.tags.slice(0, 2).join(" · ").toUpperCase()}</div>
+                    <div className="proj-arrow">↗</div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* /02 CORE STACK */}
+      {/* /05 CORE STACK */}
       <section id="skills" className="brutal-section">
         <div className="brutal-frame">
           <div className="brutal-header">
-            <div className="brutal-num">/02</div>
+            <div className="brutal-num">/05</div>
             <div className="brutal-title">CORE STACK</div>
             <div className="brutal-meta">06 DOMAINS</div>
           </div>
           <div className="skill-grid">
             {[
-              { title: "INFRA", desc: "Kubernetes, Terraform, Helm. Clusters as code, no snowflakes.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="4" y="4" width="24" height="24"/><line x1="4" y1="12" x2="28" y2="12"/><line x1="12" y1="4" x2="12" y2="28"/><circle cx="20" cy="20" r="2.5" fill="currentColor"/></svg>) },
-              { title: "MLOPS", desc: "MLflow, Airflow, Kubeflow, BentoML. Reproducible from notebook to prod.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 24 L12 16 L18 20 L28 8"/><circle cx="12" cy="16" r="2" fill="currentColor"/><circle cx="18" cy="20" r="2" fill="currentColor"/><line x1="4" y1="28" x2="28" y2="28"/></svg>) },
-              { title: "LANGUAGES", desc: "Python, Go, Bash, TypeScript. Right tool for the right blast radius.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><polyline points="10,8 4,16 10,24"/><polyline points="22,8 28,16 22,24"/><line x1="18" y1="6" x2="14" y2="26"/></svg>) },
-              { title: "OBSERVE", desc: "Prometheus, Grafana, Loki, OpenTelemetry. Pages stay quiet on weekends.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="16" cy="16" r="10"/><circle cx="16" cy="16" r="3" fill="currentColor"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="16" y1="26" x2="16" y2="30"/><line x1="2" y1="16" x2="6" y2="16"/><line x1="26" y1="16" x2="30" y2="16"/></svg>) },
-              { title: "CI / CD", desc: "GitHub Actions, ArgoCD, Tekton. Ship safely, often, with rollback.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M8 6 L24 6 L28 12 L28 26 L4 26 L4 12 Z"/><line x1="4" y1="12" x2="28" y2="12"/><circle cx="16" cy="19" r="3.5"/></svg>) },
-              { title: "CONTAINERS", desc: "Docker, containerd, BuildKit. Sealed, reproducible, multi-arch.", icon: (<svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="6" y="6" width="20" height="20"/><rect x="10" y="10" width="12" height="12"/><line x1="6" y1="14" x2="26" y2="14"/><line x1="6" y1="22" x2="26" y2="22"/></svg>) },
-            ].map((s) => (
+              { title: "INFRA", desc: "Kubernetes, Terraform, Helm. Clusters as code, no snowflakes.", Logo: KubernetesLogo },
+              { title: "MLOPS", desc: "MLflow, Airflow, Kubeflow, BentoML. Reproducible from notebook to prod.", Logo: MlflowLogo },
+              { title: "LANGUAGES", desc: "Python, Go, Bash, TypeScript. Right tool for the right blast radius.", Logo: PythonLogo },
+              { title: "OBSERVE", desc: "Prometheus, Grafana, Loki, OpenTelemetry. Pages stay quiet on weekends.", Logo: PrometheusLogo },
+              { title: "CI / CD", desc: "GitHub Actions, ArgoCD, Tekton. Ship safely, often, with rollback.", Logo: GithubActionsLogo },
+              { title: "CONTAINERS", desc: "Docker, containerd, BuildKit. Sealed, reproducible, multi-arch.", Logo: DockerLogo },
+            ].map((s, i) => (
               <div className="skill-cell" key={s.title}>
-                <div className="skill-icon">{s.icon}</div>
+                <div
+                  className="skill-icon"
+                  ref={(el) => { skillIconRefs.current[i] = el; }}
+                >
+                  <s.Logo className="skill-icon-logo" />
+                </div>
                 <div className="skill-title">{s.title}</div>
                 <div className="skill-desc">{s.desc}</div>
               </div>
@@ -702,92 +843,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* /04 OPERATING MODEL */}
-      <section id="method" className="brutal-section">
-        <div className="brutal-frame">
-          <div className="brutal-header">
-            <div className="brutal-num">/04</div>
-            <div className="brutal-title">OPERATING MODEL</div>
-            <div className="brutal-meta">FROM IDEA TO RUNBOOK</div>
-          </div>
-          <div className="method-grid">
-            {[
-              {
-                step: "01",
-                title: "Frame constraints",
-                body: "Clarify runtime target, failure modes, data freshness, security boundaries, and what must be visible on day one.",
-                signal: "inputs -> risk map",
-              },
-              {
-                step: "02",
-                title: "Ship a narrow path",
-                body: "Build the smallest deployable slice with health checks, typed config, rollback points, and a boring release path.",
-                signal: "commit -> deploy",
-              },
-              {
-                step: "03",
-                title: "Instrument behavior",
-                body: "Expose metrics, logs, traces, and model signals so the system can be judged from production evidence.",
-                signal: "runtime -> dashboard",
-              },
-              {
-                step: "04",
-                title: "Automate the handoff",
-                body: "Turn repeat work into CI/CD, scheduled jobs, runbooks, promotion gates, and dashboards a team can reuse.",
-                signal: "ops -> repeatable",
-              },
-            ].map((item) => (
-              <div className="method-cell" key={item.step}>
-                <div className="method-step">{item.step}</div>
-                <div className="method-title">{item.title}</div>
-                <p className="method-body">{item.body}</p>
-                <div className="method-signal">{item.signal}</div>
-              </div>
-            ))}
-          </div>
-          <Link href="/projects" className="method-proof method-roof" aria-label="View project case studies">
-            <span className="method-proof-label">OUTPUT</span>
-            <strong>deployable service · observable runtime · documented failure path</strong>
-            <span className="method-cta">
-              <span className="method-cta-text">case studies</span>
-              <span className="method-cta-arrow" aria-hidden="true">↗</span>
-            </span>
-          </Link>
-        </div>
-      </section>
-
       <div className="hatched-band" aria-hidden="true"></div>
-
-      {/* /05 PORTFOLIO FEATURES */}
-      <section id="metrics" className="brutal-section">
-        <div className="brutal-frame">
-          <div className="brutal-header">
-            <div className="brutal-num">/05</div>
-            <div className="brutal-title">PORTFOLIO FEATURES</div>
-            <div className="brutal-meta">IMPLEMENTED · VERIFIABLE</div>
-          </div>
-          <div className="grid gap-px bg-rule sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Interactive terminal", "Keyboard-friendly commands provide an optional discovery layer without replacing standard navigation."],
-              ["Config-driven content", "CV data, project cards and case studies share one typed source of truth."],
-              ["Project case studies", "Dedicated routes expose problems, architecture decisions, responsibilities and proof points."],
-              ["Controlled Runtime Lab", "Next.js proxies support live services while defaulting to clearly labelled sample payloads."],
-              ["Responsive frontend", "The portfolio adapts across mobile and desktop with accessible navigation and reduced-motion support."],
-              ["CI and previews", "GitHub Actions validates code while Vercel publishes a preview for every pull request."],
-            ].map(([title, description]) => (
-              <article className="min-w-0 bg-bg p-5" key={title}>
-                <h2 className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-accent">{title}</h2>
-                <p className="text-xs leading-6 text-ink-2">{description}</p>
-              </article>
-            ))}
-          </div>
-          <Link href="/projects/portfolio" className="method-proof method-roof" aria-label="Open the Portfolio case study">
-            <span className="method-proof-label">CASE STUDY</span>
-            <strong>frontend public · backend demo mode · infrastructure as code preserved</strong>
-            <span className="method-cta"><span className="method-cta-text">inspect portfolio</span><span className="method-cta-arrow" aria-hidden="true">↗</span></span>
-          </Link>
-        </div>
-      </section>
 
       {/* /06 OPEN A CHANNEL */}
       <section id="contact" className="brutal-section">
@@ -808,6 +864,7 @@ export default function HomePage() {
                 <span className="contact-tag">● OPEN TO WORK</span>
                 <span className="contact-tag">● REMOTE / EU</span>
                 <span className="contact-tag">● UTC+1</span>
+                <span className="contact-tag solar">● LOW-CARBON HOST</span>
               </div>
             </div>
             <div className="contact-col">
@@ -844,7 +901,7 @@ export default function HomePage() {
         <div className="footer-row">
           <span>● PENIEL.DEV</span>
           <span>© 2026 · ALL RIGHTS RESERVED</span>
-          <span>BUILT WITH CARE</span>
+          <span>BUILT WITH CARE · LOW-CARBON HOSTING</span>
         </div>
       </footer>
 

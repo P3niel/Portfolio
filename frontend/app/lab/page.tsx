@@ -7,6 +7,7 @@ import Nav from "@/components/Nav";
 import StatusBadge from "@/components/lab/StatusBadge";
 import MetricCard from "@/components/lab/MetricCard";
 import MetricsChart from "@/components/lab/MetricsChart";
+import { LabFlaskSvg } from "@/components/lab/ascii/LabFlaskSvg";
 import { labConfig } from "@/lib/config";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -196,7 +197,7 @@ export default function LabPage() {
     .sort()
     .at(-1);
 
-  const modeLabel = mode === "ok" ? "live" : mode === "demo" ? "demo controlled" : mode;
+  const modeLabel = mode === "ok" ? "live" : mode === "demo" ? "demo controlled" : mode === "loading" ? "loading" : "offline";
   const modelVersion = mlflow?.latest_version ?? health?.model_version ?? metrics?.modelVersion ?? null;
   const latencyMs = metrics?.latencyP99 != null ? `${Math.round(metrics.latencyP99 * 1000)}` : null;
   const confidence = prediction?.confidence != null ? `${Math.round(prediction.confidence * 100)}%` : null;
@@ -208,14 +209,17 @@ export default function LabPage() {
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 border border-rule bg-surface/40 p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="mb-2 font-mono text-xs text-accent">
-                <span className="text-ink-3">~/</span>lab
-              </p>
-              <h1 className="text-3xl font-bold text-ink">Runtime Lab</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-2">
-                Controlled demonstration of API, metrics, model registry, event stream, and inference contracts.
-              </p>
+            <div className="flex items-start gap-4">
+              <LabFlaskSvg className="mt-1 h-[92px] w-[92px] shrink-0 text-accent" />
+              <div>
+                <p className="mb-2 font-mono text-xs text-accent">
+                  <span className="text-ink-3">~/</span>lab
+                </p>
+                <h1 className="text-3xl font-bold text-ink">Runtime Lab</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-2">
+                  Controlled demonstration of API, metrics, model registry, event stream, and inference contracts.
+                </p>
+              </div>
             </div>
             <div className="flex flex-col items-end gap-2">
               <StatusBadge status={mode} />

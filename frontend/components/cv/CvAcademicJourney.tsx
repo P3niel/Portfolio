@@ -4,7 +4,7 @@ export default function CvAcademicJourney({ steps }: { steps: AcademicJourneySte
   return (
     <section className="mb-10">
       <h2 className="mb-6 text-xs font-medium uppercase tracking-widest text-accent">
-        <span className="text-ink-3">#</span> Parcours académique
+        <span className="text-ink-3">#</span> Academic Journey
       </h2>
       <ol className="border-l border-rule pl-5">
         {steps.map((step) => (

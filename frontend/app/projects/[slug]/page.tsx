@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 
   if (!project) {
     return {
-      title: "Projet introuvable - Peniel Teko-Agbo",
+      title: "Project not found - Peniel Teko-Agbo",
     };
   }
 
