@@ -125,6 +125,7 @@ body.light .navbar { background: rgba(250,249,247,.34); }
   transition: color .2s ease, background .2s ease;
   letter-spacing: 0;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  white-space: nowrap;
 }
 .nav-link:hover { color: var(--ink); background: rgba(255,255,255,.05); }
 /* active link "powers on" like a neon tube: fast bright/dim/bright flicker
@@ -640,7 +641,7 @@ body.light .motion-footer-shadow { background: linear-gradient(to bottom, rgba(2
 @keyframes nodePulse { 50% { transform: scale(1.5); } }
 .node-lines { position: absolute; inset: 0; width: 100%; height: 100%; stroke: var(--accent); stroke-width: 0.4; fill: none; opacity: .5; }
 .thumb-mark { color: var(--accent); filter: drop-shadow(0 0 12px rgba(0,255,156,.4)); }
-.proj-meta { display: flex; align-items: center; gap: 10px; padding: 16px 18px; font-family: var(--font-mono, 'JetBrains Mono', monospace); }
+.proj-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 16px 18px; font-family: var(--font-mono, 'JetBrains Mono', monospace); }
 .proj-name { font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: .05em; }
 .proj-sub { font-size: 10.5px; color: var(--ink-3); letter-spacing: .12em; text-transform: uppercase; margin-left: auto; }
 .proj-arrow { font-size: 16px; color: var(--ink-2); transition: transform .25s ease, color .25s ease; }
@@ -964,11 +965,128 @@ body.light .thumb-eyelid { background: #f0eee9; }
 .site-footer { background: var(--bg); border-top: 1px solid var(--rule); margin-bottom: 42px; }
 body.light .footer-row { color: #9a9a92; }
 
+/* profile CTA — transparent pill, neon flicker draws the eye without a solid fill */
+.profile-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform .2s ease, box-shadow .2s ease;
+  animation: profileCtaFlicker 4.8s linear infinite;
+}
+.profile-cta:hover {
+  transform: translateY(-2px);
+  animation: none;
+  box-shadow: 0 0 18px rgba(0,255,156,.5);
+}
+@keyframes profileCtaFlicker {
+  0%, 4%, 8%, 38%, 43%, 74%, 79%, 100% {
+    opacity: .95;
+    box-shadow: 0 0 10px rgba(0,255,156,.35), inset 0 0 10px rgba(0,255,156,.08);
+  }
+  5% { opacity: .3; box-shadow: 0 0 3px rgba(0,255,156,.1); }
+  6.5% { opacity: 1; box-shadow: 0 0 16px rgba(0,255,156,.55), inset 0 0 14px rgba(0,255,156,.14); }
+  39.5% { opacity: .5; box-shadow: 0 0 4px rgba(0,255,156,.14); }
+  41% { opacity: .25; box-shadow: 0 0 2px rgba(0,255,156,.08); }
+  42.5% { opacity: 1; box-shadow: 0 0 16px rgba(0,255,156,.55), inset 0 0 14px rgba(0,255,156,.14); }
+  76% { opacity: .4; box-shadow: 0 0 5px rgba(0,255,156,.16); }
+  77.5% { opacity: .92; box-shadow: 0 0 12px rgba(0,255,156,.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-cta { animation: none; }
+}
+
+/* nav CTA — contact pill, visually distinct from plain nav links */
+.nav-cta {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-left: 4px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: filter .2s ease, transform .2s ease;
+  animation: navCtaFlicker .4s ease-out;
+}
+.nav-cta:hover { filter: brightness(1.1); transform: translateY(-1px); }
+@keyframes navCtaFlicker {
+  0%   { opacity: .35; box-shadow: 0 0 0 rgba(0,255,156,0); }
+  20%  { opacity: 1;   box-shadow: 0 0 16px rgba(0,255,156,.6); }
+  35%  { opacity: .45; box-shadow: 0 0 0 rgba(0,255,156,0); }
+  55%  { opacity: 1;   box-shadow: 0 0 14px rgba(0,255,156,.5); }
+  70%  { opacity: .7;  box-shadow: 0 0 6px rgba(0,255,156,.3); }
+  100% { opacity: 1;   box-shadow: 0 0 10px rgba(0,255,156,.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-cta { animation: none; }
+}
+
+/* status pill — used on homepage grid, /projects cards, case study header */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.status-pill::before { content: '●'; font-size: 8px; }
+.status-pill.status-production { color: var(--accent); border-color: rgba(0,255,156,.35); background: rgba(0,255,156,.05); }
+.status-pill.status-active { color: var(--solar); border-color: rgba(255,209,102,.35); background: rgba(255,209,102,.05); }
+.status-pill.status-mvp { color: var(--ink-2); border-color: var(--rule); }
+.status-pill.status-prototype { color: var(--ink-3); border-color: var(--rule); }
+
+/* what-i-do — 3 expertise pillars */
+.whatido-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.whatido-cell { padding: 24px 22px; border: 1px solid var(--rule); background: rgba(255,255,255,.005); transition: background .25s ease, border-color .25s ease; }
+.whatido-cell:hover { background: rgba(0,255,156,.04); border-color: rgba(0,255,156,.22); }
+.whatido-title { font-size: 14px; font-weight: 700; letter-spacing: .04em; color: var(--ink); margin-bottom: 10px; }
+.whatido-body { font-size: 13px; line-height: 1.65; color: var(--ink-2); font-weight: 300; }
+
+/* looking-for — visitor-intent navigation */
+.lookingfor-list { display: flex; flex-direction: column; border: 1px solid var(--rule); }
+.lookingfor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) 1fr 20px;
+  grid-template-areas: "label body arrow";
+  gap: 20px;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  color: inherit;
+  transition: background .2s ease;
+}
+.lookingfor-row:last-child { border-bottom: none; }
+.lookingfor-row:hover { background: rgba(0,255,156,.05); }
+.lookingfor-row:hover .lookingfor-arrow { color: var(--accent); transform: translate(2px, -2px); }
+.lookingfor-label { grid-area: label; font-size: 14px; font-weight: 600; color: var(--ink); }
+.lookingfor-body { grid-area: body; font-size: 12.5px; line-height: 1.55; color: var(--ink-2); font-family: var(--font-mono, 'JetBrains Mono', monospace); }
+.lookingfor-arrow { grid-area: arrow; color: var(--ink-3); font-size: 16px; transition: transform .25s ease, color .25s ease; }
+
 /* responsive */
 @media (max-width: 1100px) {
   .skill-grid { grid-template-columns: repeat(3, 1fr); }
   .method-grid { grid-template-columns: repeat(2, 1fr); }
   .proj-grid { grid-template-columns: repeat(2, 1fr); }
+  .whatido-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 720px) {
   .navbar {
@@ -1000,13 +1118,18 @@ body.light .footer-row { color: #9a9a92; }
     transform: translateX(18px);
   }
   .brutal-frame { padding: 22px 18px 24px; }
-  .skill-grid, .method-grid, .proj-grid { grid-template-columns: 1fr; }
+  .skill-grid, .method-grid, .proj-grid, .whatido-grid { grid-template-columns: 1fr; }
   .method-cell { min-height: 0; }
   .method-proof { grid-template-columns: 1fr; gap: 8px; }
   .contact-block { grid-template-columns: 1fr; }
   .contact-col + .contact-col { border-left: none; border-top: 1px solid var(--rule); }
   .status-row { grid-template-columns: 110px 1fr 70px; gap: 12px; padding: 12px 14px; }
   .status-label { font-size: 10px; }
+  .lookingfor-row {
+    grid-template-columns: 1fr 16px;
+    grid-template-areas: "label arrow" "body body";
+    row-gap: 8px;
+  }
 }
 
 /* ─── TERMINAL ────────────────────────────────────────────── */
@@ -1038,6 +1161,11 @@ body.light .footer-row { color: #9a9a92; }
 }
 .cs-card.expanded { transform: translateY(0) rotateX(0deg); cursor: default; }
 .cs-card.closed { transform: translateY(100%); }
+/* Minimized: only the visible titlebar should capture clicks — the rest of the
+   card's transformed box still occupies bottom-of-viewport space and must let
+   clicks fall through to page content underneath (e.g. CTA banners). */
+.cs-card:not(.expanded):not(.closed) { pointer-events: none; }
+.cs-card:not(.expanded):not(.closed) .t-titlebar { pointer-events: auto; }
 
 .t-titlebar { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: linear-gradient(180deg,#161616,#101010); border-bottom: 1px solid var(--t-border); user-select: none; }
 .t-dots { display: flex; gap: 7px; }

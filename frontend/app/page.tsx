@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, useCallback, type ComponentType, type FormEvent } from "react";
 import Link from "next/link";
 import { cv, projects } from "@/lib/config";
+import ProfileBento from "@/components/home/ProfileBento";
+import WhatIDo from "@/components/home/WhatIDo";
+import LookingFor from "@/components/home/LookingFor";
 import { AiObsEyeSvg } from "@/components/projects/ascii/AiObsEyeSvg";
 import { NeuraldbgNeuronSvg } from "@/components/projects/ascii/NeuraldbgNeuronSvg";
 import { DevopsLabMotifSvg } from "@/components/projects/ascii/DevopsLabMotifSvg";
@@ -27,6 +30,13 @@ const projectPreviews: Record<string, string> = {
   "toxic-ai": `signal ──> anomaly?\n  confidence: ███████░\n  model mood: curious`,
   "infra-terraform-preprod": `terraform plan\n  aws preprod: OFF\n  cloud bill: protected`,
   sentinelops: `cpu · ram · disk\n  anomalies: watching\n  sentinel status: READY`,
+};
+
+const statusClass: Record<string, string> = {
+  Production: "status-production",
+  "Active Development": "status-active",
+  MVP: "status-mvp",
+  Prototype: "status-prototype",
 };
 
 const projectAsciiSvg: Record<string, ComponentType<{ className?: string }>> = {
@@ -173,6 +183,9 @@ export default function HomePage() {
       sectionGeometry.forEach(({ element, top }) => { if (probe >= top) cur = element.id; });
       const nearBottom = sy + viewportHeight >= documentHeight - 80;
       if (nearBottom && sections.length) cur = sections[sections.length - 1].id;
+      if (cur === "profile") cur = "about"; // profile has no nav link of its own — it's part of about
+      if (cur === "looking-for") cur = "what-i-do"; // looking-for has no nav link of its own — it's part of what i do
+      if (cur === "skills") cur = "projects"; // core stack falls under projects in the nav
       navLinks.forEach((l) => { l.classList.toggle("active", l.getAttribute("href") === "#" + cur); });
 
       // per-section shadow
@@ -592,10 +605,8 @@ export default function HomePage() {
       {/* NAVBAR */}
       <nav className="navbar" id="navbar">
         <a href="#about" className="nav-link active">about</a>
+        <a href="#what-i-do" className="nav-link">what i do</a>
         <a href="#projects" className="nav-link">projects</a>
-        <a href="#skills" className="nav-link">skills</a>
-        <a href="#method" className="nav-link">method</a>
-        <a href="#metrics" className="nav-link">metrics</a>
         <a href="#contact" className="nav-link">contact</a>
         <button
           className="theme-switch"
@@ -669,30 +680,18 @@ export default function HomePage() {
               designed for <em>real constraints.</em>
             </h1>
             <p className="hero-bio">
-              From backend code to delivery workflows.
-              <br />
-              Observable, documented, and built to be validated.
+              From backend code to delivery workflows — observable, documented, and built to be validated.
               <br />
               <br />
-              Computer science student focused on Python, DevOps, and AI observability, currently looking for a work-study opportunity.
+              Computer science student focused on Python, DevOps, and AI observability, open to work-study opportunities.
             </p>
             <div className="hero-cta-row">
               <Link href="/projects" className="hero-cta primary">
-                <span>Projects</span>
+                <span>View Projects</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
               </Link>
-              <Link href="/lab" className="hero-cta">Lab</Link>
+              <a href="#contact" className="hero-cta">Contact Me</a>
               <Link href="/cv" className="hero-cta">CV</Link>
-              <Link href="/projects/ai-obs" className="hero-cta">See AI-Obs</Link>
-              <button className="hero-preview-card hero-video-cta" type="button">
-                <span className="preview-thumb">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                </span>
-                <span className="preview-text">
-                  <span className="preview-eyebrow">WATCH</span>
-                  <span className="preview-title">3-min video</span>
-                </span>
-              </button>
             </div>
           </div>
           <div className="hero-spec-card">
@@ -716,11 +715,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* /03 SELECTED WORK */}
+      {/* /01 PROFILE */}
+      <section id="profile" className="brutal-section">
+        <div className="brutal-frame">
+          <div className="brutal-header">
+            <div className="brutal-num">/01</div>
+            <div className="brutal-title">PROFILE</div>
+            <div className="brutal-meta">FOR RECRUITERS &amp; DECISION-MAKERS</div>
+          </div>
+          <ProfileBento />
+        </div>
+      </section>
+
+      <WhatIDo />
+      <LookingFor />
+
+      {/* /04 SELECTED WORK */}
       <section id="projects" className="brutal-section">
         <div className="brutal-frame">
           <div className="brutal-header">
-            <div className="brutal-num">/03</div>
+            <div className="brutal-num">/04</div>
             <div className="brutal-title">SELECTED WORK</div>
             <div className="brutal-meta">{String(projects.length).padStart(2, "0")} · PROJECTS</div>
           </div>
@@ -784,6 +798,9 @@ export default function HomePage() {
                   </div>
                   <div className="proj-meta">
                     <div className="proj-name">{project.name.toUpperCase()}</div>
+                    {project.status && (
+                      <span className={`status-pill ${statusClass[project.status] ?? ""}`}>{project.status}</span>
+                    )}
                     <div className="proj-sub">{project.tags.slice(0, 2).join(" · ").toUpperCase()}</div>
                     <div className="proj-arrow">↗</div>
                   </div>
@@ -794,11 +811,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* /02 CORE STACK */}
+      {/* /05 CORE STACK */}
       <section id="skills" className="brutal-section">
         <div className="brutal-frame">
           <div className="brutal-header">
-            <div className="brutal-num">/02</div>
+            <div className="brutal-num">/05</div>
             <div className="brutal-title">CORE STACK</div>
             <div className="brutal-meta">06 DOMAINS</div>
           </div>
@@ -826,92 +843,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* /04 OPERATING MODEL */}
-      <section id="method" className="brutal-section">
-        <div className="brutal-frame">
-          <div className="brutal-header">
-            <div className="brutal-num">/04</div>
-            <div className="brutal-title">OPERATING MODEL</div>
-            <div className="brutal-meta">FROM IDEA TO RUNBOOK</div>
-          </div>
-          <div className="method-grid">
-            {[
-              {
-                step: "01",
-                title: "Frame constraints",
-                body: "Clarify runtime target, failure modes, data freshness, security boundaries, and what must be visible on day one.",
-                signal: "inputs -> risk map",
-              },
-              {
-                step: "02",
-                title: "Ship a narrow path",
-                body: "Build the smallest deployable slice with health checks, typed config, rollback points, and a boring release path.",
-                signal: "commit -> deploy",
-              },
-              {
-                step: "03",
-                title: "Instrument behavior",
-                body: "Expose metrics, logs, traces, and model signals so the system can be judged from production evidence.",
-                signal: "runtime -> dashboard",
-              },
-              {
-                step: "04",
-                title: "Automate the handoff",
-                body: "Turn repeat work into CI/CD, scheduled jobs, runbooks, promotion gates, and dashboards a team can reuse.",
-                signal: "ops -> repeatable",
-              },
-            ].map((item) => (
-              <div className="method-cell" key={item.step}>
-                <div className="method-step">{item.step}</div>
-                <div className="method-title">{item.title}</div>
-                <p className="method-body">{item.body}</p>
-                <div className="method-signal">{item.signal}</div>
-              </div>
-            ))}
-          </div>
-          <Link href="/projects" className="method-proof method-roof" aria-label="View project case studies">
-            <span className="method-proof-label">OUTPUT</span>
-            <strong>deployable service · observable runtime · documented failure path</strong>
-            <span className="method-cta">
-              <span className="method-cta-text">case studies</span>
-              <span className="method-cta-arrow" aria-hidden="true">↗</span>
-            </span>
-          </Link>
-        </div>
-      </section>
-
       <div className="hatched-band" aria-hidden="true"></div>
-
-      {/* /05 PORTFOLIO FEATURES */}
-      <section id="metrics" className="brutal-section">
-        <div className="brutal-frame">
-          <div className="brutal-header">
-            <div className="brutal-num">/05</div>
-            <div className="brutal-title">PORTFOLIO FEATURES</div>
-            <div className="brutal-meta">IMPLEMENTED · VERIFIABLE</div>
-          </div>
-          <div className="grid gap-px bg-rule sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Interactive terminal", "Keyboard-friendly commands provide an optional discovery layer without replacing standard navigation."],
-              ["Config-driven content", "CV data, project cards and case studies share one typed source of truth."],
-              ["Project case studies", "Dedicated routes expose problems, architecture decisions, responsibilities and proof points."],
-              ["Controlled Runtime Lab", "Next.js proxies support live services while defaulting to clearly labelled sample payloads."],
-              ["Responsive frontend", "The portfolio adapts across mobile and desktop with accessible navigation and reduced-motion support."],
-              ["CI and previews", "GitHub Actions validates code while Vercel publishes a preview for every pull request."],
-            ].map(([title, description]) => (
-              <article className="min-w-0 bg-bg p-5" key={title}>
-                <h2 className="mb-3 font-mono text-xs uppercase tracking-[0.14em] text-accent">{title}</h2>
-                <p className="text-xs leading-6 text-ink-2">{description}</p>
-              </article>
-            ))}
-          </div>
-          <Link href="/projects/portfolio" className="method-proof method-roof" aria-label="Open the Portfolio case study">
-            <span className="method-proof-label">CASE STUDY</span>
-            <strong>frontend public · backend demo mode · infrastructure as code preserved</strong>
-            <span className="method-cta"><span className="method-cta-text">inspect portfolio</span><span className="method-cta-arrow" aria-hidden="true">↗</span></span>
-          </Link>
-        </div>
-      </section>
 
       {/* /06 OPEN A CHANNEL */}
       <section id="contact" className="brutal-section">

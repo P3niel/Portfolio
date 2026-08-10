@@ -140,9 +140,15 @@ export default function AiObsPage() {
           <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3">Project Management: Linear · GitHub · Documentation-first workflow</p>
         </section>
 
-        <section className="mb-5 border border-rule bg-surface/20 p-6"><SectionTitle index="10">What I'm Learning</SectionTitle><div className="flex flex-wrap gap-2">{learnings.map((item) => <span key={item} className="border border-rule px-3 py-1.5 text-xs text-ink-2">{item}</span>)}</div></section>
+        <section className="mb-5 border border-rule bg-surface/20 p-6"><SectionTitle index="10">What I&apos;m Learning</SectionTitle><div className="flex flex-wrap gap-2">{learnings.map((item) => <span key={item} className="border border-rule px-3 py-1.5 text-xs text-ink-2">{item}</span>)}</div></section>
 
-        <footer className="border border-accent/40 bg-accent/5 p-6 md:p-8"><p className="max-w-4xl text-sm leading-7 text-ink-2">AI-Obs was born from a simple question: how do you precisely understand what an AI system is doing during its execution? The project applies observability principles to AI systems to provide actionable traces, reliable metrics, and a solid foundation for debugging, auditing, and governance.</p><a href="https://github.com/P3niel/ai-observability" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block border border-accent px-4 py-2 font-mono text-xs text-accent transition-colors hover:bg-accent hover:text-bg">View repository ↗</a></footer>
+        <footer className="border border-accent/40 bg-accent/5 p-6 md:p-8">
+          <p className="max-w-4xl text-sm leading-7 text-ink-2">AI-Obs was born from a simple question: how do you precisely understand what an AI system is doing during its execution? The project applies observability principles to AI systems to provide actionable traces, reliable metrics, and a solid foundation for debugging, auditing, and governance.</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a href="https://github.com/P3niel/ai-observability" target="_blank" rel="noopener noreferrer" className="border border-accent px-4 py-2 font-mono text-xs text-accent transition-colors hover:bg-accent hover:text-bg">View repository ↗</a>
+            <Link href="/#contact" className="border border-rule px-4 py-2 font-mono text-xs text-ink-2 transition-colors hover:border-accent hover:text-accent">Discuss similar work</Link>
+          </div>
+        </footer>
       </div>
     </main>
   );

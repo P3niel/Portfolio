@@ -24,6 +24,9 @@ export interface Project {
   timeframe?: string;
   impact?: { label: string; value: string }[];
   problem?: string;
+  solution?: string;
+  skillsDemonstrated?: string[];
+  status?: "Prototype" | "MVP" | "Active Development" | "Production";
   architecture?: string;
   decisions?: string[];
   outcomes?: string[];
@@ -53,6 +56,17 @@ export interface LabConfig {
   lokiUrl: string;
 }
 
+export interface ExpertiseArea {
+  title: string;
+  body: string;
+}
+
+export interface VisitorIntent {
+  label: string;
+  body: string;
+  href: string;
+}
+
 // ─── CV Data ──────────────────────────────────────────────────────────────────
 
 export const cv = {
@@ -71,6 +85,13 @@ export const cv = {
     github: "https://github.com/P3niel",
     linkedin: "https://www.linkedin.com/in/péniel-teko-agbo-b6a759237",
     location: "France",
+  },
+  snapshot: {
+    positioning: "AI Systems Engineer with a forward-deployed mindset",
+    status: "Computer science student",
+    opportunities: "Work-study placement (alternance) — open to internships too",
+    availability: "Open to work",
+    primaryStack: ["Python", "FastAPI", "Docker", "Terraform", "GitHub Actions", "Prometheus / Grafana"],
   },
   experiences: [
     {
@@ -207,6 +228,51 @@ export const cv = {
   ] satisfies AcademicJourneyStep[],
 };
 
+// ─── Positioning ──────────────────────────────────────────────────────────────
+
+export const whatIDo: ExpertiseArea[] = [
+  {
+    title: "AI Systems & Observability",
+    body: "I build tools that make AI systems inspectable — execution traces, anomaly detection, and dashboards that turn a black box into something a team can debug.",
+  },
+  {
+    title: "DevOps & Cloud Infrastructure",
+    body: "I containerize, automate, and ship: Docker environments, CI/CD pipelines, and infrastructure as code that make delivery repeatable instead of manual.",
+  },
+  {
+    title: "Backend & Software Engineering",
+    body: "I design and build Python applications and APIs — typed contracts, clean architecture, and tests that catch regressions before they reach a user.",
+  },
+];
+
+export const lookingFor: VisitorIntent[] = [
+  {
+    label: "Build and observe AI systems",
+    body: "Kernel-level execution tracing, replay, and anomaly detection for AI agents.",
+    href: "/projects/ai-obs",
+  },
+  {
+    label: "Automate delivery and CI/CD",
+    body: "Reproducible environments, GitHub Actions pipelines, governed branch access.",
+    href: "/projects/neuraldbg",
+  },
+  {
+    label: "Design reproducible cloud infrastructure",
+    body: "Terraform-defined AWS environments, provisioned and torn down on demand.",
+    href: "/projects/infra-terraform-preprod",
+  },
+  {
+    label: "Monitor systems and catch anomalies early",
+    body: "CPU/RAM/storage signals, detection engine, SMTP alerts, HTML reports.",
+    href: "/projects/sentinelops",
+  },
+  {
+    label: "See the full picture",
+    body: "All case studies — problems, architecture decisions, and proof points.",
+    href: "/projects",
+  },
+];
+
 // ─── Projects ─────────────────────────────────────────────────────────────────
 
 export const projects: Project[] = [
@@ -229,6 +295,9 @@ export const projects: Project[] = [
       { label: "Alerts", value: "Slack / Discord" },
     ],
     problem: "Make AI agent executions inspectable, comparable, and reproducible, while keeping verifiable contracts and quality criteria.",
+    solution: "A deterministic Kernel captures execution as immutable events, with replay, comparison, and anomaly detection layered on top — all governed by versioned contracts and CI checks.",
+    skillsDemonstrated: ["AI Engineering", "Software Architecture", "Observability", "Governance"],
+    status: "Active Development",
     architecture: `In-memory Kernel -> execution truth
 Serialized payloads -> analysis and detection
 Replay and comparison -> investigation
@@ -262,6 +331,9 @@ Static dashboard -> review surface`,
       { label: "Organization", value: "Lambda-section" },
     ],
     problem: "A PyTorch diagnostic tool validated across many architectures juggles dependencies, benchmarks, examples, and multiple execution paths. I took the initiative to structure its development environment to limit drift between machines, make validations replayable, control branch access by role, and keep a clean Git history.",
+    solution: "Structured the project around Docker-based reproducibility, GitHub Actions CI/CD, role-based branch access, and a cleaned-up Git history so contributions stay traceable.",
+    skillsDemonstrated: ["DevOps", "CI/CD", "Reproducibility", "Team Leadership"],
+    status: "Active Development",
     architecture: `NeuralDBG code and dependencies
         ↓
 Docker and automation scripts
@@ -295,6 +367,7 @@ Clean Git repository and traceable changes`,
     description: "A personal lab dedicated to deploying Linux services, automating infrastructure, and experimenting with CI/CD pipelines.",
     tags: ["Docker", "Terraform", "Linux", "CI/CD", "DevOps"],
     featured: true,
+    liveUrl: "/lab",
     domain: "Infrastructure and automation",
     goal: "DevOps Research",
     role: "Design and implementation",
@@ -304,6 +377,9 @@ Clean Git repository and traceable changes`,
       { label: "Stack", value: "Docker · Terraform" },
       { label: "Target", value: "Linux services" },
     ],
+    solution: "Docker and Terraform provision disposable preproduction environments, used to rehearse infrastructure changes and CI/CD patterns before they touch anything real.",
+    skillsDemonstrated: ["DevOps", "Infrastructure as Code", "CI/CD"],
+    status: "Prototype",
     outcomes: [
       "Set up preproduction environments.",
       "Automated infrastructure and Linux service deployment.",
@@ -329,6 +405,9 @@ Clean Git repository and traceable changes`,
       { label: "Runtime", value: "Controlled demo" },
     ],
     problem: "Present backend, DevOps, and AI skills without reducing them to a technology list, while clearly distinguishing features that are actually live from infrastructure that's intentionally stopped.",
+    solution: "A Next.js app with config-driven content, an interactive terminal, and proxy routes that switch cleanly between live backend data and clearly labelled demo mode.",
+    skillsDemonstrated: ["Frontend Engineering", "Software Architecture", "DevOps"],
+    status: "Production",
     architecture: `Visitor -> Next.js App Router
         ├──> home and interactive terminal
         ├──> CV and background
@@ -366,6 +445,9 @@ k3s / MLflow -> IaC preserved, runtime off`,
       { label: "Domain", value: "NLP" },
       { label: "Angle", value: "Model reliability" },
     ],
+    solution: "Experiments in anomaly detection and evaluation criteria applied to AI model outputs, focused on identifying unreliable or toxic behavior.",
+    skillsDemonstrated: ["AI Engineering", "Anomaly Detection", "Evaluation"],
+    status: "Prototype",
     outcomes: [
       "Experiments around anomaly detection.",
       "Explored evaluation criteria for AI system reliability.",
@@ -387,6 +469,9 @@ k3s / MLflow -> IaC preserved, runtime off`,
       { label: "Constraint", value: "Cost control" },
     ],
     problem: "Have a preproduction environment close to real cloud conditions, without relying on manual configuration or permanently keeping costly AWS resources running.",
+    solution: "Terraform describes the full AWS preproduction environment as code, so it can be recreated on demand and torn down afterward to avoid idle cloud cost.",
+    skillsDemonstrated: ["Cloud Infrastructure", "Infrastructure as Code", "Cost Governance"],
+    status: "Prototype",
     architecture: `Terraform code -> deployment plan
 AWS -> preproduction environment
 Infrastructure validation
@@ -419,6 +504,9 @@ Resource teardown -> cost control`,
       { label: "Status", value: "Local · Not hosted" },
     ],
     problem: "Monitor a local machine without deploying a heavy observability platform: quickly spot CPU, memory, or storage saturation, notify the administrator, and keep an actionable trace for diagnosis or audit.",
+    solution: "psutil collects system signals, a Flask API and web UI expose them, and a detection engine triggers SMTP alerts and HTML reports when thresholds are crossed.",
+    skillsDemonstrated: ["Full-Stack Development", "Observability", "Automation"],
+    status: "MVP",
     architecture: `psutil -> collects CPU, RAM, and storage
         ↓
 Flask -> status API and web interface

@@ -32,6 +32,7 @@ export default function Nav() {
           </Link>
         );
       })}
+      <Link href="/#contact" className="nav-cta">contact</Link>
       <button
         className="theme-switch"
         aria-label="toggle theme"
